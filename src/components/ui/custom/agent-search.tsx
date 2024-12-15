@@ -93,7 +93,7 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
     try {
       setLoading(true)
       const response = await fetch(
-        `http://localhost:8001/agents?page=${page}&page_size=${PAGE_SIZE}`
+        `${process.env.NEXT_PUBLIC_API_URL}/agents?page=${page}&page_size=${PAGE_SIZE}`
       )
       const data: AgentsResponse = await response.json()
 
@@ -133,7 +133,7 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
   }, []) // ← se llama una sola vez al montar
 
   const filteredAgents = searchLocally(searchTerm)
-  const categories = [...new Set(filteredAgents.map(agent => agent.category))]
+  const categories = Array.from(new Set(filteredAgents.map(agent => agent.category)))
 
   const noResults = filteredAgents.length === 0
   const shouldShowEmpty = noResults && !loading

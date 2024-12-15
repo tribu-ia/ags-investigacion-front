@@ -13,16 +13,27 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import Image from "next/image"
 import { AgentSearch } from "@/components/ui/custom/agent-search"
 
 const formSchema = z.object({
-  agent: z.string().min(1, "Por favor selecciona un agente"),
-  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
-  email: z.string().email("Dirección de email inválida"),
-  phone: z.string().min(10, "El número de teléfono debe tener al menos 10 dígitos"),
+  agent: z.string({
+    required_error: "Por favor selecciona un agente",
+  }).min(1, "Por favor selecciona un agente"),
+  name: z.string({
+    required_error: "El nombre es obligatorio",
+  }).min(2, "El nombre debe tener al menos 2 caracteres")
+    .max(100, "El nombre no puede exceder los 100 caracteres"),
+  email: z.string({
+    required_error: "El correo electrónico es obligatorio",
+  }).email("Por favor ingresa un correo electrónico válido"),
+  phone: z.string({
+    required_error: "El teléfono es obligatorio",
+  }).regex(/^\+?[0-9]{10,15}$/, "Por favor ingresa un número de teléfono válido (10-15 dígitos, puede incluir + al inicio)")
 })
 
 export function ResearcherForm() {
@@ -36,7 +47,7 @@ export function ResearcherForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
     try {
-      const response = await fetch('http://localhost:8001/investigadores', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/investigadores`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -81,9 +92,16 @@ export function ResearcherForm() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nombre Completo</FormLabel>
+                  <FormLabel className="text-base">Nombre Completo</FormLabel>
+                  <FormDescription>
+                    Ingresa tu nombre completo
+                  </FormDescription>
                   <FormControl>
-                    <Input placeholder="Juan Pérez" {...field} />
+                    <Input 
+                      className="text-base px-4 py-2"
+                      placeholder="Ej: Juan Pérez" 
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -95,9 +113,17 @@ export function ResearcherForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel className="text-base">Correo Electrónico</FormLabel>
+                  <FormDescription>
+                    Ingresa un correo electrónico válido
+                  </FormDescription>
                   <FormControl>
-                    <Input placeholder="juan@ejemplo.com" {...field} />
+                    <Input 
+                      className="text-base px-4 py-2"
+                      type="email"
+                      placeholder="correo@ejemplo.com" 
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -109,9 +135,22 @@ export function ResearcherForm() {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Número de Teléfono</FormLabel>
+                  <FormLabel className="text-base">Teléfono</FormLabel>
+                  <FormDescription>
+                    Formato: +57 300 123 4567
+                  </FormDescription>
                   <FormControl>
-                    <Input placeholder="+34123456789" {...field} />
+                    <Input 
+                      className="text-base px-4 py-2"
+                      type="tel"
+                      placeholder="+573001234567"
+                      {...field}
+                      onChange={(e) => {
+                        // Permitir solo números y el signo +
+                        const value = e.target.value.replace(/[^\d+]/g, '')
+                        field.onChange(value)
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -149,4 +188,3 @@ export function ResearcherForm() {
     </Card>
   )
 }
-
