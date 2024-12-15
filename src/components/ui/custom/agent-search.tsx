@@ -86,7 +86,7 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
     )
   }, [agents])
 
-  // Cargar más agentes
+  // Cargar más agentes, filtrando duplicados
   const loadMoreAgents = React.useCallback(async () => {
     if (!hasMore || loading) return
 
@@ -103,7 +103,16 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
         category: item.category
       }))
 
-      setAgents(prev => [...prev, ...newAgents])
+      // Filtrar duplicados por value (ID) antes de setear
+      setAgents(prev => {
+        const combined = [...prev, ...newAgents]
+        const unique = combined.filter(
+          (agent, index, arr) =>
+            arr.findIndex(a => a.value === agent.value) === index
+        )
+        return unique
+      })
+
       setHasMore(data.page < data.total_pages)
       setPage(p => p + 1)
     } catch (error) {
@@ -118,10 +127,10 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
     setSearchTerm(term)
   }, [])
 
-  // Carga inicial
+  // Carga inicial (solo una vez)
   React.useEffect(() => {
     loadMoreAgents()
-  }, [])
+  }, []) // ← se llama una sola vez al montar
 
   const filteredAgents = searchLocally(searchTerm)
   const categories = [...new Set(filteredAgents.map(agent => agent.category))]
@@ -132,6 +141,7 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true)
     try {
+      // Enviar el ID real del agente (value), no el searchTerm
       const response = await fetch('http://localhost:8001/investigadores', {
         method: 'POST',
         headers: {
@@ -139,7 +149,7 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
         },
         body: JSON.stringify({
           ...values,
-          agent: searchTerm // Aseguramos que se use el término de búsqueda actual
+          agent: values.agent,  // agent proviene del formulario parseado, idealmente es 'value'
         })
       })
 
@@ -174,7 +184,7 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
     } catch (error) {
       if (error instanceof z.ZodError) {
         console.error('Validation error:', error.errors)
-        // Aquí podrías mostrar los errores de validación al usuario
+        // Mostrar los errores de validación al usuario si quieres
       }
     }
   }
@@ -215,7 +225,7 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
                   {showQR ? (
                     <div className="p-4">
                       <p className="mb-2">¡Gracias por tu sugerencia!</p>
-                      {/* Aquí podrías mostrar un QR o mensaje de confirmación */}
+                      {/* Aquí podrías mostrar un QR o un mensaje de confirmación */}
                       <Button 
                         onClick={() => setShowQR(false)}
                         variant="outline"
@@ -316,6 +326,7 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
               </CommandItem>
             )}
 
+            {/* Agrupamos por categoría */}
             {!noResults && categories.map((category) => (
               <CommandGroup key={category} heading={category}>
                 {filteredAgents
@@ -323,10 +334,13 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
                   .map(agent => (
                     <CommandItem
                       key={agent.value}
-                      value={agent.label} // Aquí value es el label, sirve para mostrarlo si quisieras filtrar internamente
-                      onSelect={(currentValue) => {
+                      value={agent.label}
+                      onSelect={() => {
+                        // Guardar ID del agente seleccionado
                         setValue(agent.value)
                         onSelect(agent.value)
+                        // Sincronizar con el formulario
+                        setFormData(prev => ({ ...prev, agent: agent.value }))
                         setOpen(false)
                       }}
                     >
@@ -342,6 +356,7 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
               </CommandGroup>
             ))}
 
+            {/* Botón de cargar más (si todavía hay más páginas) */}
             {!shouldShowEmpty && !loading && hasMore && (
               <CommandItem
                 onSelect={() => loadMoreAgents()}

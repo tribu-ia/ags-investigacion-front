@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -13,19 +14,71 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Textarea } from "@/components/ui/textarea"
+import { AgentResult } from "./agent-result"
 
 const formSchema = z.object({
   useCase: z.string().min(10, "Por favor, describe tu caso de uso en al menos 10 caracteres."),
 })
 
+type AgentData = {
+  id: string
+  name: string
+  description: string
+  category: string
+  industry: string
+  keyFeatures: string[]
+  useCases: string[]
+  tags: string[]
+}
+
 export function LearnerForm() {
+  const [agentResults, setAgentResults] = useState<AgentData[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    // Aquí enviarías los datos a tu backend
-    console.log(values)
+    setIsLoading(true)
+    try {
+      const response = await fetch('http://localhost:8001/query/hybrid-search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: values.useCase }),
+      })
+      const data = await response.json()
+      
+      // Process and transform the data
+      const transformedResults = data.results.slice(0, 3).map((result: any) => {
+        const metadata = result[0].metadata
+        const content = result[0].page_content
+        
+        // Extract key features, use cases, and tags from the content
+        const keyFeatures = content.match(/Key Features: (.+)/)?.[1].split(', ') || []
+        const useCases = content.match(/Use Cases: (.+)/)?.[1].split(', ') || []
+        const tags = content.match(/Tags: (.+)/)?.[1].split(', ') || []
+
+        return {
+          id: metadata.id,
+          name: metadata.name,
+          description: content.match(/Description: (.+)/)?.[1] || '',
+          category: metadata.category,
+          industry: metadata.industry,
+          keyFeatures,
+          useCases,
+          tags,
+        }
+      })
+
+      setAgentResults(transformedResults)
+    } catch (error) {
+      console.error('Error fetching agent results:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -54,11 +107,20 @@ export function LearnerForm() {
               )}
             />
 
-            <Button type="submit" className="w-full">
-              Consultar
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Buscando...' : 'Consultar'}
             </Button>
           </form>
         </Form>
+
+        {agentResults.length > 0 && (
+          <div className="mt-8 space-y-6">
+            <h3 className="text-xl font-semibold">Agentes Recomendados</h3>
+            {agentResults.map((agent) => (
+              <AgentResult key={agent.id} agent={agent} />
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   )
