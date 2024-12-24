@@ -32,6 +32,8 @@ const sanitizeInput = (input: string): string => {
     .replace(/[^\w\s.,!?¿¡áéíóúÁÉÍÓÚñÑ-]/g, '') // Solo permitir letras, números y puntuación básica
     .trim()
 }
+// Definir una URL base que use la variable de entorno o un fallback
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://tribu-back.pruebas-entrevistador-inteligente.site'
 
 const formSchema = z.object({
   useCase: z.string()
@@ -44,6 +46,7 @@ const formSchema = z.object({
     )
 })
 
+// Actualizar el tipo AgentData para reflejar la estructura real
 type AgentData = {
   id: string
   name: string
@@ -55,6 +58,30 @@ type AgentData = {
   tags: string[]
 }
 
+// Tipo para la respuesta de la API
+type APIResponse = {
+  results: Array<[{
+    metadata: {
+      id: string
+      name: string
+      category: string
+      industry: string
+      shortDescription: string
+      keyFeatures: string
+      useCases: string
+      tags: string
+    }
+    page_content: string
+  }, number]>
+}
+
+// Función auxiliar para procesar tags
+const processTags = (tags: string | string[] | null | undefined): string[] => {
+  if (!tags) return []
+  if (Array.isArray(tags)) return tags.map(sanitizeInput)
+  return tags.split(',').map(tag => sanitizeInput(tag.trim()))
+}
+
 export function LearnerForm() {
   const [agentResults, setAgentResults] = useState<AgentData[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -63,18 +90,27 @@ export function LearnerForm() {
     resolver: zodResolver(formSchema),
   })
 
+  // Función auxiliar para procesar las características y casos de uso
+  const processStringList = (str: string): string[] => {
+    if (!str) return []
+    // Eliminar cualquier prefijo común como "Key Features: " o "Use Cases: "
+    const cleanStr = str.replace(/^(Key Features:|Use Cases:)\s*/i, '')
+    // Dividir por comas o saltos de línea
+    return cleanStr.split(/[,\n]/)
+      .map(item => item.trim())
+      .filter(item => item && !item.startsWith('-')) // Filtrar items vacíos y bullets
+  }
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)
     try {
-      // Sanitizar el input antes de enviarlo
       const sanitizedQuery = sanitizeInput(values.useCase)
       
-      // Verificar que el input sanitizado no esté vacío
       if (!sanitizedQuery.trim()) {
         throw new Error("El texto ingresado no es válido")
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/query/hybrid-search`, {
+      const response = await fetch(`${API_BASE_URL}/query/hybrid-search`, { 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -88,44 +124,33 @@ export function LearnerForm() {
         throw new Error('Error en la búsqueda')
       }
 
-      const data = await response.json()
+      const data: APIResponse = await response.json()
       
-      // Validar la respuesta del servidor
       if (!Array.isArray(data.results)) {
         throw new Error('Formato de respuesta inválido')
       }
 
-      // Process and transform the data
+      // Transformar los resultados al formato esperado
       const transformedResults = data.results
         .slice(0, 3)
-        .map((result: any) => {
-          const metadata = result[0]?.metadata || {}
-          const content = result[0]?.page_content || ''
+        .map(([result]) => {
+          const { metadata } = result
           
-          // Sanitizar también el contenido recibido
-          const sanitizedContent = sanitizeInput(content)
-          
-          // Extract key features, use cases, and tags from the content safely
-          const keyFeatures = sanitizedContent.match(/Key Features: (.+)/)?.[1]?.split(', ') || []
-          const useCases = sanitizedContent.match(/Use Cases: (.+)/)?.[1]?.split(', ') || []
-          const tags = metadata.tags || []
-
           return {
-            id: metadata.id || '',
+            id: metadata.id,
             name: sanitizeInput(metadata.name || ''),
-            description: sanitizeInput(metadata.description || ''),
+            description: sanitizeInput(metadata.shortDescription || ''),
             category: sanitizeInput(metadata.category || ''),
             industry: sanitizeInput(metadata.industry || ''),
-            keyFeatures: keyFeatures.map(sanitizeInput),
-            useCases: useCases.map(sanitizeInput),
-            tags: tags.map(sanitizeInput),
+            keyFeatures: processStringList(metadata.keyFeatures || ''),
+            useCases: processStringList(metadata.useCases || ''),
+            tags: processTags(metadata.tags)
           }
         })
 
       setAgentResults(transformedResults)
     } catch (error) {
       console.error('Error:', error)
-      // Mostrar un mensaje de error al usuario
       form.setError('useCase', {
         type: 'manual',
         message: error instanceof Error ? error.message : 'Error en la búsqueda'

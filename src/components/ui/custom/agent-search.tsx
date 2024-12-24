@@ -23,10 +23,12 @@ type Agent = {
   value: string
   label: string
   category: string
+  isAssigned: boolean
 }
 
 interface AgentsResponse {
   items: Array<{
+    isAssigned: boolean
     id: string
     name: string
     category: string
@@ -59,6 +61,16 @@ const formSchema = z.object({
   agent: z.string()
 })
 
+// Definir una URL base que use la variable de entorno o un fallback
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://tribu-back.pruebas-entrevistador-inteligente.site'
+
+// Agregar un caché global para los agentes
+const agentsCache = {
+  data: [] as Agent[],
+  timestamp: 0,
+  CACHE_DURATION: 5 * 60 * 1000 // 5 minutos
+}
+
 export function AgentSearch({ onSelect }: AgentSearchProps) {
   const [open, setOpen] = React.useState(false)
   const [value, setValue] = React.useState("")
@@ -77,6 +89,9 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
   })
   const [showQR, setShowQR] = React.useState(false)
 
+  // Agregar una referencia para controlar si ya se hizo la carga inicial
+  const initialLoadDone = React.useRef(false)
+
   // Filtrado local
   const searchLocally = React.useCallback((term: string) => {
     if (!term) return agents
@@ -91,28 +106,32 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
     if (!hasMore || loading) return
 
     try {
+      // Verificar si hay datos en caché y si son válidos
+      const now = Date.now()
+      if (agentsCache.data.length > 0 && 
+          (now - agentsCache.timestamp) < agentsCache.CACHE_DURATION) {
+        setAgents(agentsCache.data)
+        return
+      }
+
       setLoading(true)
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/agents?page=${page}&page_size=${PAGE_SIZE}`
+        `${API_BASE_URL}/agents?page=${page}&page_size=${PAGE_SIZE}`
       )
       const data: AgentsResponse = await response.json()
 
       const newAgents = data.items.map(item => ({
         value: item.id,
         label: item.name,
-        category: item.category
+        category: item.category,
+        isAssigned: item.isAssigned
       }))
 
-      // Filtrar duplicados por value (ID) antes de setear
-      setAgents(prev => {
-        const combined = [...prev, ...newAgents]
-        const unique = combined.filter(
-          (agent, index, arr) =>
-            arr.findIndex(a => a.value === agent.value) === index
-        )
-        return unique
-      })
+      // Actualizar el caché
+      agentsCache.data = newAgents
+      agentsCache.timestamp = now
 
+      setAgents(newAgents)
       setHasMore(data.page < data.total_pages)
       setPage(p => p + 1)
     } catch (error) {
@@ -129,8 +148,30 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
 
   // Carga inicial (solo una vez)
   React.useEffect(() => {
+    // Evitar cargas duplicadas
+    if (initialLoadDone.current) return
+    
+    // Reiniciar estados
+    setValue("")
+    setAgents([])
+    setPage(1)
+    setHasMore(true)
+    setSearchTerm("")
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      agent: ''
+    })
+    setShowQR(false)
+    setShowForm(false)
+    
+    // Cargar agentes iniciales
     loadMoreAgents()
-  }, []) // ← se llama una sola vez al montar
+    
+    // Marcar que ya se hizo la carga inicial
+    initialLoadDone.current = true
+  }, []) // Se ejecuta solo al montar el componente
 
   const filteredAgents = searchLocally(searchTerm)
   const categories = Array.from(new Set(filteredAgents.map(agent => agent.category)))
@@ -142,7 +183,7 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
     setIsSubmitting(true)
     try {
       // Enviar el ID real del agente (value), no el searchTerm
-      const response = await fetch('http://localhost:8001/investigadores', {
+      const response = await fetch(`${API_BASE_URL}/investigadores`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -336,21 +377,33 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
                       key={agent.value}
                       value={agent.label}
                       onSelect={() => {
-                        // Guardar ID del agente seleccionado
-                        setValue(agent.value)
-                        onSelect(agent.value)
-                        // Sincronizar con el formulario
-                        setFormData(prev => ({ ...prev, agent: agent.value }))
-                        setOpen(false)
+                        if (!agent.isAssigned) {
+                          setValue(agent.value)
+                          onSelect(agent.value)
+                          setFormData(prev => ({ ...prev, agent: agent.value }))
+                          setOpen(false)
+                        }
                       }}
+                      disabled={agent.isAssigned}
+                      className={cn(
+                        agent.isAssigned && "opacity-50 cursor-not-allowed",
+                        "flex items-center justify-between"
+                      )}
                     >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          value === agent.value ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {agent.label}
+                      <div className="flex items-center gap-2">
+                        <Check
+                          className={cn(
+                            "h-4 w-4",
+                            value === agent.value ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        <span>{agent.label}</span>
+                      </div>
+                      {agent.isAssigned && (
+                        <span className="text-red-500 text-sm font-medium ml-2">
+                          En investigación
+                        </span>
+                      )}
                     </CommandItem>
                   ))}
               </CommandGroup>

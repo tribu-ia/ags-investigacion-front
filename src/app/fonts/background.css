@@ -1,0 +1,51 @@
+.magicpattern {
+  width: 100%;
+  min-height: 100%;
+  background-color: hsl(var(--background));
+  background-image: 
+    radial-gradient(circle, hsl(var(--foreground) / 0.03) 1px, transparent 1px),
+    radial-gradient(circle, hsl(var(--foreground) / 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: 0 0, 10px 10px;
+  background-repeat: repeat;
+  position: relative;
+  isolation: isolate;
+  align-content: space-around;
+}
+
+/* Overlay sutil para dar profundidad */
+.magicpattern::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom right,
+    hsl(var(--background) / 0.05),
+    hsl(var(--foreground) / 0.05)
+  );
+  z-index: -1;
+}
+
+/* Ajustes específicos para modo oscuro */
+.dark .magicpattern {
+  background-image: 
+    radial-gradient(circle, hsl(var(--foreground) / 0.05) 1px, transparent 1px),
+    radial-gradient(circle, hsl(var(--foreground) / 0.05) 1px, transparent 1px);
+}
+
+.dark .magicpattern::after {
+  background: linear-gradient(
+    to bottom right,
+    hsl(var(--background) / 0.1),
+    hsl(var(--foreground) / 0.1)
+  );
+}
+
+.margin-top {
+    padding-top: 10%;
+}
+
+.margin-bottom {
+    padding-bottom: 1%;
+}
+  
