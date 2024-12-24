@@ -148,10 +148,8 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
 
   // Carga inicial (solo una vez)
   React.useEffect(() => {
-    // Evitar cargas duplicadas
     if (initialLoadDone.current) return
     
-    // Reiniciar estados
     setValue("")
     setAgents([])
     setPage(1)
@@ -166,12 +164,10 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
     setShowQR(false)
     setShowForm(false)
     
-    // Cargar agentes iniciales
     loadMoreAgents()
     
-    // Marcar que ya se hizo la carga inicial
     initialLoadDone.current = true
-  }, []) // Se ejecuta solo al montar el componente
+  }, [loadMoreAgents]) // Agregamos loadMoreAgents a las dependencias
 
   const filteredAgents = searchLocally(searchTerm)
   const categories = Array.from(new Set(filteredAgents.map(agent => agent.category)))

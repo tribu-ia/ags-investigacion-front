@@ -24,7 +24,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <div className="relative flex min-h-screen flex-col magicpattern">
-        
             <main className="flex-1 container mx-auto px-4">{children}</main>
           </div>
         </ThemeProvider>
