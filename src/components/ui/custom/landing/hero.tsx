@@ -1,7 +1,7 @@
 "use client"
 
 import { Canvas, useFrame } from "@react-three/fiber"
-import { Suspense } from "react"
+import { Suspense, useRef, useMemo } from "react"
 import {
   Environment,
   OrbitControls,
@@ -12,8 +12,7 @@ import {
 } from "@react-three/drei"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from 'lucide-react'
-import { useRef } from "react"
-import { Vector3, Group, Mesh, Clock } from "three"
+import { Vector3, Group, Mesh, Clock, BufferAttribute } from "three"
 
 interface FrameState {
   clock: Clock
@@ -62,8 +61,130 @@ function InnerParticles() {
   )
 }
 
+interface NodeData {
+  baseRadius: number
+  speed: number
+  offset: number
+  radiusVariation: number
+  heightVariation: number
+  direction: number
+  phaseOffset: number
+}
+
+function NetworkNodes({ nodes }: { nodes: NodeData[] }) {
+  const nodesRef = useRef<Group>(null)
+
+  useFrame(({ clock }: FrameState) => {
+    if (!nodesRef.current) return
+    const time = clock.getElapsedTime()
+    
+    nodes.forEach((node, i) => {
+      const child = nodesRef.current?.children[i] as Mesh
+      if (child) {
+        const angle = time * node.speed * node.direction + node.offset
+        const radius = node.baseRadius + Math.sin(time * 0.5 + node.phaseOffset) * node.radiusVariation
+        const height = Math.sin(time * 0.3 + node.phaseOffset) * node.heightVariation
+        const depth = Math.cos(time * 0.4 + node.phaseOffset) * 0.5
+
+        child.position.x = Math.cos(angle) * radius
+        child.position.y = Math.sin(angle) * radius + height
+        child.position.z = depth
+        
+        // Hacer que los nodos pulsen sutilmente
+        const scale = Math.sin(time * 2 + node.phaseOffset) * 0.2 + 1
+        child.scale.setScalar(scale)
+      }
+    })
+  })
+
+  return (
+    <group ref={nodesRef}>
+      {nodes.map((_, i) => (
+        <mesh key={i}>
+          <sphereGeometry args={[0.08, 16, 16]} />
+          <meshStandardMaterial
+            color="#4fc3f7"
+            emissive="#4fc3f7"
+            emissiveIntensity={2}
+            toneMapped={false}
+          />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+function ConnectionLines({ nodes }: { nodes: NodeData[] }) {
+  const linesRef = useRef<Group>(null)
+
+  useFrame(({ clock }: FrameState) => {
+    if (!linesRef.current) return
+    const time = clock.getElapsedTime()
+
+    // Actualizar las líneas para que sigan a los nodos
+    nodes.forEach((node, i) => {
+      const nextNode = nodes[(i + 1) % nodes.length]
+      const line = linesRef.current?.children[i] as Mesh
+
+      if (line) {
+        const angle1 = time * node.speed * node.direction + node.offset
+        const angle2 = time * nextNode.speed * nextNode.direction + nextNode.offset
+
+        const radius1 = node.baseRadius + Math.sin(time * 0.5 + node.phaseOffset) * node.radiusVariation
+        const radius2 = nextNode.baseRadius + Math.sin(time * 0.5 + nextNode.phaseOffset) * nextNode.radiusVariation
+
+        const height1 = Math.sin(time * 0.3 + node.phaseOffset) * node.heightVariation
+        const height2 = Math.sin(time * 0.3 + nextNode.phaseOffset) * nextNode.heightVariation
+
+        const positions = new Float32Array([
+          Math.cos(angle1) * radius1,
+          Math.sin(angle1) * radius1 + height1,
+          Math.cos(time * 0.4 + node.phaseOffset) * 0.5,
+          Math.cos(angle2) * radius2,
+          Math.sin(angle2) * radius2 + height2,
+          Math.cos(time * 0.4 + nextNode.phaseOffset) * 0.5,
+        ])
+
+        line.geometry.setAttribute('position', new BufferAttribute(positions, 3))
+      }
+    })
+  })
+
+  return (
+    <group ref={linesRef}>
+      {nodes.map((_, i) => (
+        <line key={i}>
+          <bufferGeometry>
+            <bufferAttribute
+              attach="attributes-position"
+              count={2}
+              array={new Float32Array(6)}
+              itemSize={3}
+            />
+          </bufferGeometry>
+          <lineBasicMaterial
+            color="#4fc3f7"
+            opacity={0.3}
+            transparent
+            toneMapped={false}
+          />
+        </line>
+      ))}
+    </group>
+  )
+}
+
 function Globe() {
   const globeRef = useRef<Mesh>(null)
+  const nodes = useMemo<NodeData[]>(() => Array.from({ length: 12 }, () => ({
+    baseRadius: 2.5,
+    speed: Math.random() * 0.5 + 0.3,
+    offset: Math.random() * Math.PI * 2,
+    radiusVariation: Math.random() * 0.3,
+    heightVariation: Math.random() * 0.5,
+    direction: Math.random() > 0.5 ? 1 : -1,
+    phaseOffset: Math.random() * Math.PI * 2,
+  })), [])
 
   useFrame(({ clock }: FrameState) => {
     if (globeRef.current) {
@@ -104,59 +225,8 @@ function Globe() {
           ))}
         </group>
         
-        {/* Nodos de la red */}
-        {Array.from({ length: 12 }).map((_, i) => (
-          <mesh
-            key={i}
-            position={[
-              Math.cos((i / 12) * Math.PI * 2) * 2.5,
-              Math.sin((i / 12) * Math.PI * 2) * 2.5,
-              0,
-            ]}
-          >
-            <sphereGeometry args={[0.08, 16, 16]} />
-            <meshStandardMaterial
-              color="#4fc3f7"
-              emissive="#4fc3f7"
-              emissiveIntensity={2}
-              toneMapped={false}
-            />
-          </mesh>
-        ))}
-
-        {/* Líneas de conexión */}
-        {Array.from({ length: 12 }).map((_, i) => {
-          const nextIndex = (i + 1) % 12
-          const start = [
-            Math.cos((i / 12) * Math.PI * 2) * 2.5,
-            Math.sin((i / 12) * Math.PI * 2) * 2.5,
-            0,
-          ]
-          const end = [
-            Math.cos((nextIndex / 12) * Math.PI * 2) * 2.5,
-            Math.sin((nextIndex / 12) * Math.PI * 2) * 2.5,
-            0,
-          ]
-          return (
-            <line key={`line-${i}`}>
-              <bufferGeometry attach="geometry">
-                <bufferAttribute
-                  attach="attributes-position"
-                  count={2}
-                  array={new Float32Array([...start, ...end])}
-                  itemSize={3}
-                />
-              </bufferGeometry>
-              <lineBasicMaterial
-                attach="material"
-                color="#4fc3f7"
-                opacity={0.5}
-                transparent
-                toneMapped={false}
-              />
-            </line>
-          )
-        })}
+        <NetworkNodes nodes={nodes} />
+        <ConnectionLines nodes={nodes} />
       </Float>
     </group>
   )
