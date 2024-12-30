@@ -21,9 +21,14 @@
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-tabs": "^1.1.1",
     "@radix-ui/react-toast": "^1.2.2",
+    "@react-spring/three": "^9.7.5",
+    "@react-three/drei": "^9.88.0",
+    "@react-three/fiber": "^8.15.12",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
+    "framer-motion": "^11.15.0",
+    "framer-motion-3d": "^11.15.0",
     "isomorphic-dompurify": "^2.19.0",
     "lucide-react": "^0.447.0",
     "next": "14.2.14",
@@ -34,17 +39,18 @@
     "react-markdown": "^9.0.1",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
+    "three": "^0.158.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.17",
     "eslint": "^8",
     "eslint-config-next": "14.2.14",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5",
-    "autoprefixer": "^10.4.17"
+    "typescript": "^5"
   }
 }

@@ -9,7 +9,10 @@ const nextConfig = {
   },
   trailingSlash: true,
   experimental: {
-    trace: false
+  },
+  webpack: (config) => {
+    config.externals = [...(config.externals || []), { canvas: 'canvas' }]
+    return config
   }
 }
 
