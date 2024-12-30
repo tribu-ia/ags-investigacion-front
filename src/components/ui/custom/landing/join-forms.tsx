@@ -31,12 +31,14 @@ export function JoinForms() {
               <TabsTrigger value="researcher">Para Investigadores</TabsTrigger>
               <TabsTrigger value="learner">Encuentra tu Agente</TabsTrigger>
             </TabsList>
-            <TabsContent value="researcher" className="p-6 border rounded-lg mt-4 bg-gray-900/50">
-              <ResearcherForm />
-            </TabsContent>
-            <TabsContent value="learner" className="p-6 border rounded-lg mt-4 bg-gray-900/50">
-              <LearnerForm />
-            </TabsContent>
+            <div className="min-h-[600px]">
+              <TabsContent value="researcher" className="p-6 border rounded-lg mt-4 bg-gray-900/50">
+                <ResearcherForm />
+              </TabsContent>
+              <TabsContent value="learner" className="p-6 border rounded-lg mt-4 bg-gray-900/50">
+                <LearnerForm />
+              </TabsContent>
+            </div>
           </Tabs>
         </div>
       </div>

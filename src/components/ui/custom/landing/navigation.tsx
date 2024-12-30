@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Menu, Brain } from "lucide-react"
 
@@ -45,7 +46,7 @@ export function Navigation() {
           <div className="flex items-center justify-center gap-12">
             <Link href="/" className="flex items-center gap-2 absolute left-4 md:static">
               <Brain className="h-6 w-6" />
-              <span className="text-xl font-bold">Agentes IA</span>
+              <span className="text-xl font-bold">Agentes Tribu IA</span>
             </Link>
             {/* Navegación desktop */}
             <div className="hidden md:flex items-center justify-center gap-12">
@@ -61,6 +62,24 @@ export function Navigation() {
               ))}
             </div>
           </div>
+
+          {/* Link a TribuIA */}
+          <a
+            href="https://tribuia.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden md:flex items-center gap-2 absolute right-4 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+          >
+            By <span className="font-semibold">TribuIA</span>
+            <div className="h-10 w-10 relative">
+              <Image 
+                src="/logo.png" 
+                alt="TribuIA Logo" 
+                fill
+                className="rounded-full object-contain"
+              />
+            </div>
+          </a>
 
           {/* Botón menú móvil */}
           <Button
@@ -87,6 +106,22 @@ export function Navigation() {
                   {link.title}
                 </a>
               ))}
+              <a
+                href="https://tribuia.org"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary px-4 py-2"
+              >
+                By TribuIA
+                <div className="h-8 w-8 relative">
+                  <Image 
+                    src="/logo.png" 
+                    alt="TribuIA Logo" 
+                    fill
+                    className="rounded-full object-contain"
+                  />
+                </div>
+              </a>
             </div>
           </div>
         )}

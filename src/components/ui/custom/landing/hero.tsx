@@ -309,11 +309,11 @@ export function LandingHero() {
             {/* Stats */}
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-12 mt-8">
               <div className="flex flex-col items-center">
-                <span className="text-3xl font-bold text-white">500+</span>
+                <span className="text-3xl font-bold text-white">∞</span>
                 <span className="text-sm text-muted-foreground">Agentes Documentados</span>
               </div>
               <div className="flex flex-col items-center">
-                <span className="text-3xl font-bold text-white">10+</span>
+                <span className="text-3xl font-bold text-white">∞</span>
                 <span className="text-sm text-muted-foreground">Investigadores Activos</span>
               </div>
               <div className="flex flex-col items-center">
