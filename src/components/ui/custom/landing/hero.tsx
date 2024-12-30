@@ -1,6 +1,6 @@
 "use client"
 
-import { Canvas } from "@react-three/fiber"
+import { Canvas, useFrame } from "@react-three/fiber"
 import { Suspense } from "react"
 import {
   Environment,
@@ -8,55 +8,133 @@ import {
   Preload,
   Html,
   Float,
+  MeshDistortMaterial,
 } from "@react-three/drei"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from 'lucide-react'
+import { useRef } from "react"
+import { Vector3, Group, Mesh, Clock } from "three"
+
+interface FrameState {
+  clock: Clock
+}
+
+function InnerParticles() {
+  const particlesRef = useRef<Group>(null)
+  const particles = Array.from({ length: 50 }, () => ({
+    position: new Vector3(
+      (Math.random() - 0.5) * 3,
+      (Math.random() - 0.5) * 3,
+      (Math.random() - 0.5) * 3
+    ),
+    speed: Math.random() * 0.01 + 0.005,
+    offset: Math.random() * Math.PI * 2,
+  }))
+
+  useFrame(({ clock }: FrameState) => {
+    if (!particlesRef.current) return
+    particles.forEach((particle, i) => {
+      const child = particlesRef.current?.children[i] as Mesh
+      if (child) {
+        const angle = clock.getElapsedTime() * particle.speed + particle.offset
+        child.position.x = Math.cos(angle) * 1.5
+        child.position.y = Math.sin(angle) * 1.5
+        child.position.z = Math.sin(angle * 2) * 0.5
+        child.scale.setScalar(Math.sin(angle * 3) * 0.3 + 0.7)
+      }
+    })
+  })
+
+  return (
+    <group ref={particlesRef}>
+      {particles.map((particle, i) => (
+        <mesh key={i} position={particle.position}>
+          <sphereGeometry args={[0.03, 8, 8]} />
+          <meshStandardMaterial
+            color="#4fc3f7"
+            emissive="#4fc3f7"
+            emissiveIntensity={2}
+            toneMapped={false}
+          />
+        </mesh>
+      ))}
+    </group>
+  )
+}
 
 function Globe() {
+  const globeRef = useRef<Mesh>(null)
+
+  useFrame(({ clock }: FrameState) => {
+    if (globeRef.current) {
+      globeRef.current.rotation.y = clock.getElapsedTime() * 0.1
+    }
+  })
+
   return (
     <group>
-      <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
-        <mesh>
+      <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
+        {/* Esfera principal con distorsión */}
+        <mesh ref={globeRef}>
           <sphereGeometry args={[2, 64, 64]} />
-          <meshStandardMaterial
+          <MeshDistortMaterial
             color="#1a237e"
             emissive="#0d47a1"
             emissiveIntensity={0.5}
             roughness={0.7}
             metalness={0.3}
+            distort={0.3}
+            speed={2}
           />
         </mesh>
+
+        <InnerParticles />
         
-        {/* Network nodes */}
-        {Array.from({ length: 8 }).map((_, i) => (
+        {/* Anillos externos */}
+        <group rotation-x={Math.PI / 2}>
+          {[2.1, 2.2, 2.3].map((radius, i) => (
+            <mesh key={i}>
+              <ringGeometry args={[radius, radius + 0.02, 64]} />
+              <meshBasicMaterial
+                color="#4fc3f7"
+                transparent
+                opacity={0.2 - i * 0.05}
+              />
+            </mesh>
+          ))}
+        </group>
+        
+        {/* Nodos de la red */}
+        {Array.from({ length: 12 }).map((_, i) => (
           <mesh
             key={i}
             position={[
-              Math.cos((i / 8) * Math.PI * 2) * 2.5,
-              Math.sin((i / 8) * Math.PI * 2) * 2.5,
+              Math.cos((i / 12) * Math.PI * 2) * 2.5,
+              Math.sin((i / 12) * Math.PI * 2) * 2.5,
               0,
             ]}
           >
-            <sphereGeometry args={[0.05, 16, 16]} />
+            <sphereGeometry args={[0.08, 16, 16]} />
             <meshStandardMaterial
               color="#4fc3f7"
               emissive="#4fc3f7"
               emissiveIntensity={2}
+              toneMapped={false}
             />
           </mesh>
         ))}
 
-        {/* Connection lines */}
-        {Array.from({ length: 8 }).map((_, i) => {
-          const nextIndex = (i + 1) % 8
+        {/* Líneas de conexión */}
+        {Array.from({ length: 12 }).map((_, i) => {
+          const nextIndex = (i + 1) % 12
           const start = [
-            Math.cos((i / 8) * Math.PI * 2) * 2.5,
-            Math.sin((i / 8) * Math.PI * 2) * 2.5,
+            Math.cos((i / 12) * Math.PI * 2) * 2.5,
+            Math.sin((i / 12) * Math.PI * 2) * 2.5,
             0,
           ]
           const end = [
-            Math.cos((nextIndex / 8) * Math.PI * 2) * 2.5,
-            Math.sin((nextIndex / 8) * Math.PI * 2) * 2.5,
+            Math.cos((nextIndex / 12) * Math.PI * 2) * 2.5,
+            Math.sin((nextIndex / 12) * Math.PI * 2) * 2.5,
             0,
           ]
           return (
@@ -69,7 +147,13 @@ function Globe() {
                   itemSize={3}
                 />
               </bufferGeometry>
-              <lineBasicMaterial attach="material" color="#4fc3f7" linewidth={1} />
+              <lineBasicMaterial
+                attach="material"
+                color="#4fc3f7"
+                opacity={0.5}
+                transparent
+                toneMapped={false}
+              />
             </line>
           )
         })}
@@ -82,8 +166,9 @@ function Scene() {
   return (
     <Canvas camera={{ position: [0, 0, 8], fov: 45 }}>
       <Suspense fallback={null}>
-        <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} intensity={1} />
+        <ambientLight intensity={0.2} />
+        <pointLight position={[10, 10, 10]} intensity={2} />
+        <pointLight position={[-10, -10, -10]} intensity={2} />
         <Globe />
         <OrbitControls
           enableZoom={false}
