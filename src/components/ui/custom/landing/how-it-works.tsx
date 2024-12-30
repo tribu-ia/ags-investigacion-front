@@ -1,67 +1,70 @@
 "use client"
 
-import { motion } from "framer-motion"
-import { Card, CardContent } from "@/components/ui/card"
-import { Brain, Network, Cpu } from 'lucide-react'
+import { Search, FileText, PresentationIcon, GitBranch, Users2, Lightbulb } from 'lucide-react'
+
+const steps = [
+  {
+    title: "Elige tu Agente",
+    description: "Selecciona un agente de nuestro directorio curado con más de 500 opciones. Desde frameworks hasta productos completos, hay algo para cada interés.",
+    icon: Search,
+  },
+  {
+    title: "Investiga y Documenta",
+    description: "Dedica dos semanas a explorar tu agente. Prueba sus capacidades, desarrolla ejemplos prácticos y documenta tus hallazgos siguiendo nuestras guías.",
+    icon: FileText,
+  },
+  {
+    title: "Comparte tus Hallazgos",
+    description: "Presenta tus descubrimientos en sesiones semanales de 10 minutos. Comparte insights, código y casos de uso con otros investigadores.",
+    icon: PresentationIcon,
+  },
+  {
+    title: "Contribuye al Repositorio",
+    description: "Añade tu documentación al repositorio común. Ayuda a construir una base de conocimiento sólida para la comunidad hispanohablante.",
+    icon: GitBranch,
+  },
+  {
+    title: "Únete a la Discusión",
+    description: "Participa en grupos de discusión técnica, comparte ideas y aprende de otros investigadores. La comunidad crece con cada aportación.",
+    icon: Users2,
+  },
+  {
+    title: "Innova y Crea",
+    description: "Utiliza el conocimiento adquirido para desarrollar nuevas soluciones. Contribuye a proyectos open source y ayuda a definir el futuro de los agentes IA.",
+    icon: Lightbulb,
+  },
+]
 
 export function HowItWorks() {
   return (
-    <section className="w-full py-12 md:py-24 lg:py-32 bg-black/50">
+    <section id="how-it-works" className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-black to-gray-900">
       <div className="container px-4 md:px-6">
         <div className="flex flex-col items-center justify-center space-y-4 text-center">
           <div className="space-y-2">
-            <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
-              Cómo Funciona
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
+              Cómo Funciona la Investigación
             </h2>
-            <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl">
-              Un vistazo al proceso de nuestros agentes inteligentes
+            <p className="max-w-[900px] text-gray-400 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+              Nuestra metodología está diseñada para maximizar el aprendizaje colectivo y crear una base de conocimiento valiosa para toda la comunidad.
             </p>
           </div>
         </div>
-        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3 lg:gap-12 mt-12">
+        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 mt-12">
           {steps.map((step, index) => (
-            <motion.div
-              key={step.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.2 }}
-              viewport={{ once: true }}
-            >
-              <Card className="relative overflow-hidden border-primary/20 bg-black/40 backdrop-blur-sm">
-                <CardContent className="p-6">
-                  <step.icon className="h-12 w-12 text-primary mb-4" />
-                  <h3 className="text-xl font-bold mb-2">{step.title}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {step.description}
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
+            <div key={step.title} className="relative overflow-hidden rounded-lg border border-gray-800 bg-black p-8">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10">
+                  <step.icon className="h-5 w-5 text-blue-500" />
+                </div>
+                <span className="text-sm text-blue-500">Paso {index + 1}</span>
+              </div>
+              <h3 className="text-xl font-bold mb-2">{step.title}</h3>
+              <p className="text-gray-400">{step.description}</p>
+            </div>
           ))}
         </div>
       </div>
     </section>
   )
 }
-
-const steps = [
-  {
-    title: "Análisis Inteligente",
-    description:
-      "Los agentes analizan y comprenden las necesidades específicas de cada tarea.",
-    icon: Brain,
-  },
-  {
-    title: "Conexión en Red",
-    description:
-      "Colaboración entre agentes especializados para resolver problemas complejos.",
-    icon: Network,
-  },
-  {
-    title: "Procesamiento y Ejecución",
-    description:
-      "Ejecución precisa y eficiente de tareas con retroalimentación en tiempo real.",
-    icon: Cpu,
-  },
-]
 

@@ -260,22 +260,41 @@ export function LandingHero() {
       <Scene />
       <div className="absolute inset-0 z-20 flex items-center justify-center">
         <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center space-y-4 text-center">
-            <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-              La Nueva Era de Agentes IA
-            </h1>
-            <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-              Conectando el mundo a través de agentes inteligentes. Automatiza,
-              innova y escala tu negocio con nuestra red global de IA.
+          <div className="flex flex-col items-center space-y-6 text-center">
+            <div className="space-y-2">
+              <h2 className="text-lg font-semibold text-blue-400 uppercase tracking-wide">
+                Comunidad OpenSource
+              </h2>
+              <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">
+                Agentes IA: La Nueva Era Comienza
+              </h1>
+            </div>
+            <p className="mx-auto max-w-[800px] text-muted-foreground text-lg md:text-xl">
+              Únete a la comunidad hispana más grande de investigación en agentes de IA. 
+              Exploramos, documentamos y construimos el futuro de la inteligencia artificial juntos.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
-              <Button size="lg" className="h-12 px-6">
-                Comienza Ahora
+              <Button size="lg" className="h-12 px-6 bg-blue-600 hover:bg-blue-700">
+                Sé un Investigador
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <Button variant="outline" size="lg" className="h-12 px-6">
-                Explora los Agentes
+                Explora Nuestro Repositorio
               </Button>
+            </div>
+            <div className="flex items-center gap-8 pt-8 text-muted-foreground">
+              <div className="flex flex-col items-center">
+                <span className="text-2xl font-bold text-white">500+</span>
+                <span className="text-sm">Agentes Documentados</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-2xl font-bold text-white">10+</span>
+                <span className="text-sm">Investigadores Activos</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-2xl font-bold text-white">∞</span>
+                <span className="text-sm">Conocimiento Compartido</span>
+              </div>
             </div>
           </div>
         </div>
