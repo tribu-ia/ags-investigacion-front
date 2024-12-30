@@ -1,20 +1,23 @@
 import { Navigation } from "@/components/ui/custom/landing/navigation";
 import { LandingHero } from "@/components/ui/custom/landing/hero";
 import { Features } from "@/components/ui/custom/landing/features";
-import { GlobalNetwork } from "@/components/ui/custom/landing/global-network";
+import { JoinForms } from "@/components/ui/custom/landing/join-forms";
 import { CallToAction } from "@/components/ui/custom/landing/call-to-action";
 import { HowItWorks } from "@/components/ui/custom/landing/how-it-works";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <main className="relative min-h-screen w-full bg-black overflow-x-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]" />
       <Navigation />
-      <LandingHero />
-      <Features />
-      <HowItWorks />
-      <GlobalNetwork />
-      <CallToAction />
-    </div>
+      <div className="relative">
+        <LandingHero />
+        <Features />
+        <HowItWorks />
+        <JoinForms />
+        <CallToAction />
+      </div>
+    </main>
   )
 }
 

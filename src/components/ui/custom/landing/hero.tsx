@@ -255,45 +255,70 @@ function Scene() {
 
 export function LandingHero() {
   return (
-    <section className="relative h-screen w-full overflow-hidden bg-black">
+    <section className="relative min-h-[100vh] w-full overflow-hidden bg-black">
+      {/* Canvas container */}
+      <div className="absolute inset-0">
+        <Scene />
+      </div>
+      
+      {/* Gradient overlay */}
       <div className="absolute inset-0 z-10 bg-gradient-to-b from-background/0 via-background/60 to-background" />
-      <Scene />
-      <div className="absolute inset-0 z-20 flex items-center justify-center">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center space-y-6 text-center">
-            <div className="space-y-2">
-              <h2 className="text-lg font-semibold text-blue-400 uppercase tracking-wide">
+      
+      {/* Content */}
+      <div className="relative z-20 flex min-h-[100vh] items-center justify-center px-4">
+        <div className="container mx-auto">
+          <div className="flex flex-col items-center space-y-8 text-center">
+            {/* Tag line */}
+            <div className="inline-block rounded-full bg-blue-500/10 px-4 py-1.5">
+              <span className="text-sm font-medium text-blue-400 uppercase tracking-wide">
                 Comunidad OpenSource
-              </h2>
-              <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">
-                Agentes IA: La Nueva Era Comienza
-              </h1>
+              </span>
             </div>
-            <p className="mx-auto max-w-[800px] text-muted-foreground text-lg md:text-xl">
+            
+            {/* Main heading */}
+            <h1 className="max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">
+              Agentes IA: La Nueva Era Comienza
+            </h1>
+            
+            {/* Description */}
+            <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
               Únete a la comunidad hispana más grande de investigación en agentes de IA. 
               Exploramos, documentamos y construimos el futuro de la inteligencia artificial juntos.
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-4">
-              <Button size="lg" className="h-12 px-6 bg-blue-600 hover:bg-blue-700">
+            
+            {/* CTA buttons */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
+              <Button 
+                size="lg" 
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+                onClick={() => document.querySelector('#join-forms')?.scrollIntoView({ behavior: 'smooth' })}
+              >
                 Sé un Investigador
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-              <Button variant="outline" size="lg" className="h-12 px-6">
-                Explora Nuestro Repositorio
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="w-full sm:w-auto"
+                onClick={() => document.querySelector('#join-forms')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                Encuentra tu Agente
               </Button>
             </div>
-            <div className="flex items-center gap-8 pt-8 text-muted-foreground">
+            
+            {/* Stats */}
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-12 mt-8">
               <div className="flex flex-col items-center">
-                <span className="text-2xl font-bold text-white">500+</span>
-                <span className="text-sm">Agentes Documentados</span>
+                <span className="text-3xl font-bold text-white">500+</span>
+                <span className="text-sm text-muted-foreground">Agentes Documentados</span>
               </div>
               <div className="flex flex-col items-center">
-                <span className="text-2xl font-bold text-white">10+</span>
-                <span className="text-sm">Investigadores Activos</span>
+                <span className="text-3xl font-bold text-white">10+</span>
+                <span className="text-sm text-muted-foreground">Investigadores Activos</span>
               </div>
               <div className="flex flex-col items-center">
-                <span className="text-2xl font-bold text-white">∞</span>
-                <span className="text-sm">Conocimiento Compartido</span>
+                <span className="text-3xl font-bold text-white">∞</span>
+                <span className="text-sm text-muted-foreground">Conocimiento Compartido</span>
               </div>
             </div>
           </div>

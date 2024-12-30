@@ -38,28 +38,35 @@ const steps = [
 export function HowItWorks() {
   return (
     <section id="how-it-works" className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-black to-gray-900">
-      <div className="container px-4 md:px-6">
+      <div className="container px-4 md:px-6 mx-auto">
         <div className="flex flex-col items-center justify-center space-y-4 text-center">
-          <div className="space-y-2">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
+          <div className="space-y-2 max-w-[42rem] mx-auto">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
               Cómo Funciona la Investigación
             </h2>
-            <p className="max-w-[900px] text-gray-400 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            <p className="text-gray-400 md:text-lg">
               Nuestra metodología está diseñada para maximizar el aprendizaje colectivo y crear una base de conocimiento valiosa para toda la comunidad.
             </p>
           </div>
         </div>
-        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 mt-12">
+        <div className="mx-auto grid gap-6 sm:gap-8 mt-12 sm:mt-16 md:mt-20 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 max-w-5xl">
           {steps.map((step, index) => (
-            <div key={step.title} className="relative overflow-hidden rounded-lg border border-gray-800 bg-black p-8">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10">
-                  <step.icon className="h-5 w-5 text-blue-500" />
+            <div 
+              key={step.title} 
+              className="relative overflow-hidden rounded-lg border border-gray-800 bg-black p-6 sm:p-8 hover:border-gray-700 transition-colors"
+            >
+              <div className="flex flex-col h-full">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10">
+                    <step.icon className="h-6 w-6 text-blue-500" />
+                  </div>
+                  <div>
+                    <span className="text-sm text-blue-500 block mb-1">Paso {index + 1}</span>
+                    <h3 className="text-lg font-semibold">{step.title}</h3>
+                  </div>
                 </div>
-                <span className="text-sm text-blue-500">Paso {index + 1}</span>
+                <p className="text-gray-400 flex-grow">{step.description}</p>
               </div>
-              <h3 className="text-xl font-bold mb-2">{step.title}</h3>
-              <p className="text-gray-400">{step.description}</p>
             </div>
           ))}
         </div>
