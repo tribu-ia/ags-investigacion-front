@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
 import { AgentSearch } from "@/components/ui/custom/form/agent-search"
+import { useAuth } from "@/hooks/use-auth"
 
 const formSchema = z.object({
   agent: z.string({
@@ -52,22 +53,37 @@ export function ResearcherForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [refreshAgentKey, setRefreshAgentKey] = useState(0)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const { profile } = useAuth()
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
   })
+
+  // Efecto para pre-llenar el nombre cuando el perfil esté disponible
+  useEffect(() => {
+    if (profile) {
+      form.setValue("name", profile.name || profile.preferred_username || "")
+      form.setValue("email", profile.email || "")
+    }
+  }, [profile, form])
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
     setErrorMessage(null)
     
     try {
+      // Agregamos el email del perfil a los datos del formulario
+      const formDataWithEmail = {
+        ...values,
+        email: profile?.email
+      }
+
       const response = await fetch(`${API_BASE_URL}/investigadores`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(values)
+        body: JSON.stringify(formDataWithEmail)
       })
 
       const data: ApiResponse = await response.json()
@@ -81,7 +97,6 @@ export function ResearcherForm() {
       form.reset({
         agent: '',
         name: '',
-        email: '',
         phone: ''
       })
 
@@ -90,14 +105,6 @@ export function ResearcherForm() {
     } catch (error) {
       console.error('Error:', error)
       setErrorMessage(error instanceof Error ? error.message : 'Error al enviar el formulario')
-      
-      // Si es un error de validación de correo, resaltar el campo
-      if (error instanceof Error && error.message.includes('correo')) {
-        form.setError('email', {
-          type: 'manual',
-          message: error.message
-        })
-      }
     } finally {
       setIsSubmitting(false)
     }
@@ -170,12 +177,13 @@ export function ResearcherForm() {
                 <FormItem>
                   <FormLabel className="text-base">Nombre Completo</FormLabel>
                   <FormDescription>
-                    Ingresa tu nombre completo
+                    Nombre registrado en el sistema
                   </FormDescription>
                   <FormControl>
                     <Input 
-                      className="text-base px-4 py-2"
+                      className="text-base px-4 py-2 bg-muted"
                       placeholder="Ej: Juan Pérez" 
+                      readOnly
                       {...field} 
                     />
                   </FormControl>
@@ -191,13 +199,14 @@ export function ResearcherForm() {
                 <FormItem>
                   <FormLabel className="text-base">Correo Electrónico</FormLabel>
                   <FormDescription>
-                    Ingresa un correo electrónico válido
+                    Correo registrado en el sistema
                   </FormDescription>
                   <FormControl>
                     <Input 
-                      className="text-base px-4 py-2"
+                      className="text-base px-4 py-2 bg-muted"
                       type="email"
-                      placeholder="correo@ejemplo.com" 
+                      placeholder="correo@ejemplo.com"
+                      readOnly
                       {...field} 
                     />
                   </FormControl>

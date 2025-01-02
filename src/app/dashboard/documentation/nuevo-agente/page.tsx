@@ -7,18 +7,18 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import { AppSidebar } from "@/components/ui/custom/sidebar/app-sidebar";
+} from "@/components/ui/breadcrumb"
+import { Separator } from "@/components/ui/separator"
+import { AppSidebar } from "@/components/ui/custom/sidebar/app-sidebar"
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+} from "@/components/ui/sidebar"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ResearcherForm } from "@/components/ui/custom/form/researcher-form"
+import { LearnerForm } from "@/components/ui/custom/form/learner-form"
+import { Card } from "@/components/ui/card"
 
 export default function NuevoAgentePage() {
   return (
@@ -52,56 +52,28 @@ export default function NuevoAgentePage() {
           <div className="space-y-4">
             <h1 className="text-3xl font-bold">Investigar Nuevo Agente</h1>
             <p className="text-muted-foreground">
-              Completa el formulario para iniciar una nueva investigación de agente.
+              Selecciona el tipo de investigación que deseas realizar
             </p>
           </div>
-          
-          <div className="grid gap-6 max-w-2xl">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="nombre">Nombre del Agente</Label>
-                <Input
-                  id="nombre"
-                  placeholder="Ej: Asistente de Análisis de Datos"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="objetivo">Objetivo Principal</Label>
-                <Textarea
-                  id="objetivo"
-                  placeholder="Describe el objetivo principal del agente..."
-                  className="min-h-[100px]"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="capacidades">Capacidades Requeridas</Label>
-                <Textarea
-                  id="capacidades"
-                  placeholder="Lista las capacidades que debería tener el agente..."
-                  className="min-h-[100px]"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="recursos">Recursos Necesarios</Label>
-                <Textarea
-                  id="recursos"
-                  placeholder="Describe los recursos necesarios para el desarrollo..."
-                  className="min-h-[100px]"
-                />
-              </div>
-              
-              <div className="pt-4">
-                <Button className="w-full">
-                  Iniciar Investigación
-                </Button>
-              </div>
-            </div>
+
+          <div className="grid gap-6">
+            <Tabs defaultValue="researcher" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="researcher">Investigador</TabsTrigger>
+                <TabsTrigger value="learner">Aprendiz</TabsTrigger>
+              </TabsList>
+              <TabsContent value="researcher">
+                <ResearcherForm />
+              </TabsContent>
+              <TabsContent value="learner">
+                <Card className="mt-4">
+                  <LearnerForm />
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </SidebarInset>
     </SidebarProvider>
-  );
+  )
 } 

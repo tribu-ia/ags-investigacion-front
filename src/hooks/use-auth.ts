@@ -13,7 +13,7 @@ export interface UserProfile {
 }
 
 export function useAuth() {
-  const { keycloak, authenticated, initialized } = useSession();
+  const { keycloak, authenticated, initialized, logout: keycloakLogout } = useSession();
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
@@ -48,5 +48,6 @@ export function useAuth() {
     hasAnyRole,
     isLoading: !initialized,
     isAuthenticated: authenticated,
+    logout: keycloakLogout,
   };
 } 
