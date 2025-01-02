@@ -1,31 +1,31 @@
 import type { Metadata } from "next";
-import { ThemeProvider } from "@/components/theme-provider";
-import { Navbar } from "@/components/navbar";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import "./fonts/background.css";
+import { ThemeProvider } from "@/components/theme-provider";
+import { SessionProvider } from "@/providers/session-provider";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Tribu IA",
-  description: "Plataforma de investigación de agentes",
+  title: "AGS Investigación",
+  description: "Plataforma de investigación AGS",
 };
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className="min-h-screen bg-background antialiased">
+      <body className={inter.className}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
+          defaultTheme="system"
+          enableSystem
           disableTransitionOnChange
         >
-          <div className="relative flex min-h-screen flex-col magicpattern">
-            <main className="flex-1 container mx-auto px-4">{children}</main>
-          </div>
+          <SessionProvider>{children}</SessionProvider>
         </ThemeProvider>
       </body>
     </html>
