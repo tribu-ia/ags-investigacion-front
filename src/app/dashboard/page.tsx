@@ -3,6 +3,21 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/providers/auth-provider";
 import { AuthLoading } from "@/components/auth/auth-loading";
+import { AppSidebar } from "@/components/ui/custom/sidebar/app-sidebar";
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+  } from "@/components/ui/breadcrumb"
+  import { Separator } from "@/components/ui/separator"
+  import {
+    SidebarInset,
+    SidebarProvider,
+    SidebarTrigger,
+  } from "@/components/ui/sidebar"
 
 export default function DashboardPage() {
   const { logout, keycloak, initialized, authenticated } = useAuth();
@@ -13,46 +28,37 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="container mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground mt-2">Bienvenido, {userName}</p>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink href="#">
+                    Building Your Application
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
-          <Button onClick={logout} variant="outline">
-            Cerrar Sesión
-          </Button>
+        </header>
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
+            <div className="aspect-video rounded-xl bg-muted/50" />
+            <div className="aspect-video rounded-xl bg-muted/50" />
+            <div className="aspect-video rounded-xl bg-muted/50" />
+          </div>
+          <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Card Placeholder 1 */}
-          <div className="p-6 bg-card rounded-lg shadow-lg">
-            <h2 className="text-2xl font-semibold mb-4">Estadísticas</h2>
-            <div className="h-40 bg-muted rounded-md animate-pulse" />
-          </div>
-          
-          {/* Card Placeholder 2 */}
-          <div className="p-6 bg-card rounded-lg shadow-lg">
-            <h2 className="text-2xl font-semibold mb-4">Actividad Reciente</h2>
-            <div className="space-y-2">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-8 bg-muted rounded animate-pulse" />
-              ))}
-            </div>
-          </div>
-          
-          {/* Card Placeholder 3 */}
-          <div className="p-6 bg-card rounded-lg shadow-lg">
-            <h2 className="text-2xl font-semibold mb-4">Tareas Pendientes</h2>
-            <div className="space-y-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-6 bg-muted rounded animate-pulse" />
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-} 
+      </SidebarInset>
+    </SidebarProvider>
+  )
+}
