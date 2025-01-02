@@ -2,18 +2,10 @@
 
 import { LearnerForm } from "@/components/ui/custom/form/learner-form"
 import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { useRouter } from "next/navigation"
 
 export function JoinForms() {
-  const router = useRouter()
-
-  const handleRedirect = () => {
-    router.push("/dashboard")
-  }
-
   return (
-    <section id="join-research" className="container space-y-6 py-8 md:py-12 lg:py-24">
+    <section className="container space-y-6 py-8 md:py-12 lg:py-24">
       <div className="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center">
         <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-6xl">
           Únete a la Investigación
@@ -23,23 +15,11 @@ export function JoinForms() {
         </p>
       </div>
 
-      <div className="flex justify-center mt-8">
-        <Button 
-          size="lg" 
-          className="bg-blue-600 hover:bg-blue-700"
-          onClick={handleRedirect}
-        >
-          Sé un Investigador
-        </Button>
-      </div>
-
       <div className="mx-auto w-full max-w-[58rem]">
         <Card>
           <LearnerForm />
         </Card>
       </div>
-
-
     </section>
   )
 } 
