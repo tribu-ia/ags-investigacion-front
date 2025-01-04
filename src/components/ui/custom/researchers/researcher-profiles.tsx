@@ -2,12 +2,13 @@
 
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
-import { Calendar, Clock } from "lucide-react"
+import { Calendar, Clock, Github } from "lucide-react"
 
 interface Researcher {
   id: string
   name: string
-  image: string
+  avatarUrl: string
+  repositoryUrl: string
   role: string
   presentation: string
   date: string
@@ -18,7 +19,8 @@ const researchers: Researcher[] = [
   {
     id: "1",
     name: "ANDY",
-    image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6",
+    avatarUrl: "https://avatars.githubusercontent.com/u/66916145?v=4",
+    repositoryUrl: "https://github.com/JamiltonQuintero",
     role: "Machine Learning Engineer",
     presentation: "Redes Neuronales Avanzadas",
     date: "20 Feb 2024",
@@ -27,7 +29,8 @@ const researchers: Researcher[] = [
   {
     id: "2",
     name: "OLIVIA",
-    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb",
+    avatarUrl: "https://avatars.githubusercontent.com/u/66916145?v=4",
+    repositoryUrl: "https://github.com/JamiltonQuintero",
     role: "Data Scientist",
     presentation: "Análisis Predictivo",
     date: "20 Feb 2024",
@@ -36,7 +39,8 @@ const researchers: Researcher[] = [
   {
     id: "3",
     name: "NOAH",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d",
+    avatarUrl: "https://avatars.githubusercontent.com/u/66916145?v=4",
+    repositoryUrl: "https://github.com/JamiltonQuintero",
     role: "NLP Researcher",
     presentation: "Procesamiento de Lenguaje Natural",
     date: "20 Feb 2024",
@@ -45,7 +49,8 @@ const researchers: Researcher[] = [
   {
     id: "4",
     name: "ELIJAH",
-    image: "https://images.unsplash.com/photo-1522529599102-193c0d76b5b6",
+    avatarUrl: "https://avatars.githubusercontent.com/u/66916145?v=4",
+    repositoryUrl: "https://github.com/JamiltonQuintero",
     role: "AI Ethics Researcher",
     presentation: "Ética en IA",
     date: "20 Feb 2024",
@@ -54,7 +59,8 @@ const researchers: Researcher[] = [
   {
     id: "5",
     name: "AVA",
-    image: "https://images.unsplash.com/photo-1534083220759-4c3c00112ea0",
+    avatarUrl: "https://avatars.githubusercontent.com/u/66916145?v=4",
+    repositoryUrl: "https://github.com/JamiltonQuintero",
     role: "Computer Vision Expert",
     presentation: "Visión por Computadora",
     date: "20 Feb 2024",
@@ -63,7 +69,8 @@ const researchers: Researcher[] = [
   {
     id: "6",
     name: "HENRY",
-    image: "https://images.unsplash.com/photo-1512663150964-d8f43c899f76",
+    avatarUrl: "https://avatars.githubusercontent.com/u/66916145?v=4",
+    repositoryUrl: "https://github.com/JamiltonQuintero",
     role: "Robotics Engineer",
     presentation: "Robótica Cognitiva",
     date: "20 Feb 2024",
@@ -89,7 +96,7 @@ function ResearcherCard({ researcher, index }: ResearcherCardProps) {
       <div className="flex h-full flex-col items-center justify-center p-3">
         <div className="relative aspect-square w-[50%] overflow-hidden rounded-full border-4 border-white/80">
           <img
-            src={researcher.image}
+            src={researcher.avatarUrl}
             alt={researcher.name}
             className="h-full w-full object-cover p-2"
           />
@@ -115,6 +122,16 @@ function ResearcherCard({ researcher, index }: ResearcherCardProps) {
                 <span>{researcher.time}</span>
               </div>
             </div>
+            
+            <a 
+              href={researcher.repositoryUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-flex items-center gap-1 text-xs text-white/60 hover:text-white/80 transition-colors"
+            >
+              <Github className="h-3 w-3" />
+              <span>GitHub Profile</span>
+            </a>
           </motion.div>
         </div>
       </div>
