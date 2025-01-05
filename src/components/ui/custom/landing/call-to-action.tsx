@@ -22,7 +22,7 @@ export function CallToAction() {
             <Button 
               size="lg" 
               className="w-full bg-blue-600 hover:bg-blue-700"
-              onClick={() => document.querySelector('#join-forms')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => document.querySelector('#join-research')?.scrollIntoView({ behavior: 'smooth' })}
             >
               Únete como Investigador
               <ArrowRight className="ml-2 h-4 w-4" />

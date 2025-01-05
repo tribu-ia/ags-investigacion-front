@@ -1,7 +1,7 @@
 "use client"
 
 import { Canvas, useFrame } from "@react-three/fiber"
-import { Suspense, useRef, useMemo } from "react"
+import { Suspense, useRef, useMemo, useEffect, useState } from "react"
 import {
   Environment,
   OrbitControls,
@@ -253,6 +253,48 @@ function Scene() {
   )
 }
 
+interface Stats {
+  total_agents: number;
+  documented_agents: number;
+  active_investigators: number;
+}
+
+function StatsSection() {
+  const [stats, setStats] = useState<Stats>({
+    total_agents: 0,
+    documented_agents: 0,
+    active_investigators: 0
+  });
+
+  useEffect(() => {
+    fetch('http://localhost:8001/stats')
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "success") {
+          setStats(data.data);
+        }
+      })
+      .catch(error => console.error('Error fetching stats:', error));
+  }, []);
+
+  return (
+    <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-12 mt-8">
+      <div className="flex flex-col items-center">
+        <span className="text-3xl font-bold text-white">{stats.total_agents}</span>
+        <span className="text-sm text-muted-foreground">Agentes IA actuales</span>
+      </div>
+      <div className="flex flex-col items-center">
+        <span className="text-3xl font-bold text-white">{stats.active_investigators}</span>
+        <span className="text-sm text-muted-foreground">Investigadores Activos</span>
+      </div>
+      <div className="flex flex-col items-center">
+        <span className="text-3xl font-bold text-white">{stats.documented_agents}</span>
+        <span className="text-sm text-muted-foreground">Agentes Documentados</span>
+      </div>
+    </div>
+  );
+}
+
 export function LandingHero() {
   return (
     <section className="relative min-h-[100vh] w-full overflow-hidden bg-black">
@@ -291,7 +333,7 @@ export function LandingHero() {
               <Button 
                 size="lg" 
                 className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
-                onClick={() => document.querySelector('#join-forms')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => document.querySelector('#join-research')?.scrollIntoView({ behavior: 'smooth' })}
               >
                 Sé un Investigador
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -300,27 +342,13 @@ export function LandingHero() {
                 variant="outline" 
                 size="lg" 
                 className="w-full sm:w-auto"
-                onClick={() => document.querySelector('#join-forms')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => document.querySelector('#join-research')?.scrollIntoView({ behavior: 'smooth' })}
               >
                 Encuentra tu Agente
               </Button>
             </div>
             
-            {/* Stats */}
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-12 mt-8">
-              <div className="flex flex-col items-center">
-                <span className="text-3xl font-bold text-white">∞</span>
-                <span className="text-sm text-muted-foreground">Agentes Documentados</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-3xl font-bold text-white">∞</span>
-                <span className="text-sm text-muted-foreground">Investigadores Activos</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-3xl font-bold text-white">∞</span>
-                <span className="text-sm text-muted-foreground">Conocimiento Compartido</span>
-              </div>
-            </div>
+            <StatsSection />
           </div>
         </div>
       </div>
