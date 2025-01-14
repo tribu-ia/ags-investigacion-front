@@ -34,12 +34,10 @@ const formSchema = z.object({
   }).email("Por favor ingresa un correo electrónico válido"),
   phone: z.string({
     required_error: "El teléfono es obligatorio",
-  }).regex(/^\+?[0-9]{10,15}$/, "Por favor ingresa un número de teléfono válido (10-15 dígitos, puede incluir + al inicio)"),
-  github_username: z.string({
-    required_error: "El usuario de GitHub es obligatorio",
-  }).min(1, "Por favor ingresa tu usuario de GitHub"),
-  linkedin_profile: z.string().optional(),
+  }).regex(/^\+?[0-9]{10,15}$/, "Por favor ingresa un número de teléfono válido (10-15 dígitos, puede incluir + al inicio)")
 })
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://tribu-back.pruebas-entrevistador-inteligente.site'
 
 type ApiResponse = {
   status: string;
