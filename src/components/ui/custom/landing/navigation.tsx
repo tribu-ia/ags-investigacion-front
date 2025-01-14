@@ -17,7 +17,7 @@ const navigationLinks = [
   },
   {
     title: "Sé un Investigador",
-    href: "#join-research",
+    href: "#join-forms",
   },
   {
     title: "Únete",

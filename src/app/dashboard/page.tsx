@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/providers/auth-provider";
 import { AuthLoading } from "@/components/auth/auth-loading";
 import { AppSidebar } from "@/components/ui/custom/sidebar/app-sidebar";
 import {
@@ -18,6 +17,7 @@ import {
     SidebarProvider,
     SidebarTrigger,
   } from "@/components/ui/sidebar"
+import { useAuth } from "@/hooks/use-auth";
 
 export default function DashboardPage() {
   const { logout, keycloak, initialized, authenticated } = useAuth();
