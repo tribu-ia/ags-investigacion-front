@@ -16,8 +16,8 @@ const navigationLinks = [
     href: "#how-it-works",
   },
   {
-    title: "Sé un Investigador",
-    href: "#join-forms",
+    title: "Encuentra tu agente",
+    href: "#join-research",
   },
   {
     title: "Únete",
