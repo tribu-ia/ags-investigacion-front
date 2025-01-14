@@ -5,6 +5,12 @@ import { useRouter, usePathname } from "next/navigation";
 import Keycloak from "keycloak-js";
 import { AuthLoading } from "@/components/auth/auth-loading";
 
+declare global {
+  interface Window {
+    _keycloak: any;
+  }
+}
+
 type SessionContextType = {
   keycloak: Keycloak | null;
   initialized: boolean;
@@ -35,7 +41,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     let refreshInterval: NodeJS.Timeout;
     
     const initKeycloak = async () => {
-      console.log("SessionProvider: Initializing Keycloak...");
+
       const kc = new Keycloak({
         url: process.env.NEXT_PUBLIC_KEYCLOAK_URL,
         realm: process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "",
@@ -50,66 +56,73 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           checkLoginIframe: false,
         });
 
-        console.log("SessionProvider: Keycloak initialized:", { authenticated });
         setKeycloak(kc);
         setInitialized(true);
+        window._keycloak = kc;
 
-        if (authenticated) {
-          console.log("SessionProvider: User is authenticated");
-          // Token refresh setup
-          refreshInterval = setInterval(() => {
-            kc.updateToken(70)
-              .then((refreshed) => {
-                if (refreshed) {
-                  console.log("SessionProvider: Token refreshed successfully");
-                }
-              })
-              .catch((error) => {
-                console.error("SessionProvider: Failed to refresh token:", error);
-                clearInterval(refreshInterval);
-                kc.logout({
-                  redirectUri: window.location.origin,
-                });
+        if (authenticated && kc.token) {
+          localStorage.setItem('kc_token', kc.token);
+          
+          refreshInterval = setInterval(async () => {
+            console.group('🔄 Token Refresh Attempt');
+            try {
+              const refreshed = await kc.updateToken(70);
+       
+              if (refreshed && kc.token) {
+                localStorage.setItem('kc_token', kc.token);
+
+              }
+            } catch (error) {
+              console.error('Failed to refresh token:', error);
+              clearInterval(refreshInterval);
+              localStorage.removeItem('kc_token');
+              kc.logout({
+                redirectUri: window.location.origin,
               });
+            }
+            console.groupEnd();
           }, 60000);
         } else if (pathname.startsWith('/dashboard')) {
-          console.log("SessionProvider: User is not authenticated, redirecting to login");
+          console.log('User not authenticated, redirecting to login');
           await kc.login({
             redirectUri: window.location.origin + pathname,
           });
         }
       } catch (error) {
-        console.error("SessionProvider: Keycloak init error:", error);
+        console.error('Keycloak initialization error:', error);
         setInitialized(true);
       }
+      console.groupEnd();
     };
 
     initKeycloak();
 
     return () => {
+      console.log('Cleaning up Keycloak session');
       if (refreshInterval) {
         clearInterval(refreshInterval);
       }
-      console.log("SessionProvider: Cleaning up session");
+      localStorage.removeItem('kc_token');
     };
   }, [pathname]);
 
   const login = () => {
-    console.log("SessionProvider: Login requested");
     if (keycloak) {
       keycloak.login({
         redirectUri: window.location.origin + "/dashboard",
       });
     }
+    console.groupEnd();
   };
 
   const logout = () => {
-    console.log("SessionProvider: Logout requested");
     if (keycloak) {
+      localStorage.removeItem('kc_token');
       keycloak.logout({
         redirectUri: window.location.origin,
       });
     }
+    console.groupEnd();
   };
 
   if (!initialized) {

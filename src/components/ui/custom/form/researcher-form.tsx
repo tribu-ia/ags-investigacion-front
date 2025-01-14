@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input"
 import Image from "next/image"
 import { AgentSearch } from "@/components/ui/custom/form/agent-search"
 import { useAuth } from "@/hooks/use-auth"
+import { useApi } from "@/hooks/use-api"
 
 const formSchema = z.object({
   agent: z.string({
@@ -40,8 +41,6 @@ const formSchema = z.object({
   linkedin_profile: z.string().optional(),
 })
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
-
 type ApiResponse = {
   status: string;
   message: string;
@@ -58,12 +57,12 @@ export function ResearcherForm() {
   const [refreshAgentKey, setRefreshAgentKey] = useState(0)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const { profile } = useAuth()
+  const api = useApi()
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
   })
 
-  // Efecto para pre-llenar el nombre cuando el perfil esté disponible
   useEffect(() => {
     if (profile) {
       form.setValue("name", profile.name || profile.preferred_username || "")
@@ -76,21 +75,12 @@ export function ResearcherForm() {
     setErrorMessage(null)
     
     try {
-      // Agregamos el email del perfil a los datos del formulario
       const formDataWithEmail = {
         ...values,
         email: profile?.email
       }
 
-      const response = await fetch(`${API_BASE_URL}/investigadores`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formDataWithEmail)
-      })
-
-      const data: ApiResponse = await response.json()
+      const { data } = await api.post('/investigadores', formDataWithEmail)
 
       // Verificar si hay error en la respuesta
       if (data.data && !data.data.success) {
@@ -106,9 +96,13 @@ export function ResearcherForm() {
 
       setRefreshAgentKey(prev => prev + 1)
       setShowQR(true)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error:', error)
-      setErrorMessage(error instanceof Error ? error.message : 'Error al enviar el formulario')
+      setErrorMessage(
+        error.response?.data?.message || 
+        error.message || 
+        'Error al enviar el formulario'
+      )
     } finally {
       setIsSubmitting(false)
     }

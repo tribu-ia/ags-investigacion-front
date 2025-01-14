@@ -18,12 +18,15 @@ import {
     SidebarTrigger,
   } from "@/components/ui/sidebar"
 import { useAuth } from "@/hooks/use-auth";
-import { useEffect } from "react";
+import { useApi } from "@/hooks/use-api";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
   const { profile, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
+  const api = useApi();
+  const [data, setData] = useState(null);
   const userName = profile?.preferred_username || "Usuario";
 
   useEffect(() => {
@@ -31,6 +34,19 @@ export default function DashboardPage() {
       router.push("/");
     }
   }, [isLoading, isAuthenticated, router]);
+
+  useEffect(() => {
+    // Ejemplo de cómo usar el cliente API con el token
+    if (isAuthenticated) {
+      api.get('/tu-endpoint')
+        .then(response => {
+          setData(response.data);
+        })
+        .catch(error => {
+          console.error('Error fetching data:', error);
+        });
+    }
+  }, [isAuthenticated, api]);
 
   if (isLoading || !isAuthenticated) {
     return <AuthLoading />;
