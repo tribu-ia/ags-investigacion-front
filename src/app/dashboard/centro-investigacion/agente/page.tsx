@@ -55,11 +55,14 @@ export default function AgenteInvestigadorPage() {
             {/* Aquí irá el componente del chat con el agente */}
             <div className="rounded-lg border bg-card p-4 h-[600px]">
               <div className="flex flex-col h-full">
+                <div className="flex items-center justify-center h-full">
+                  <span className="text-lg text-muted-foreground">Proximamente</span>
+                </div>
                 <div className="flex-1 space-y-4 overflow-auto p-4">
                   {/* Mensajes del chat irán aquí */}
                 </div>
                 <div className="border-t pt-4">
-                  <div className="flex gap-2">
+                {/*<div className="flex gap-2">
                     <input
                       type="text"
                       placeholder="Escribe tu pregunta..."
@@ -68,7 +71,7 @@ export default function AgenteInvestigadorPage() {
                     <button className="rounded-md bg-primary px-4 py-2 text-primary-foreground">
                       Enviar
                     </button>
-                  </div>
+                  </div>*/}
                 </div>
               </div>
             </div>

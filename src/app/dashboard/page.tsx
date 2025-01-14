@@ -18,12 +18,21 @@ import {
     SidebarTrigger,
   } from "@/components/ui/sidebar"
 import { useAuth } from "@/hooks/use-auth";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
-  const { logout, keycloak, initialized, authenticated } = useAuth();
-  const userName = keycloak?.tokenParsed?.preferred_username || "Usuario";
+  const { profile, isLoading, isAuthenticated } = useAuth();
+  const router = useRouter();
+  const userName = profile?.preferred_username || "Usuario";
 
-  if (!initialized || !authenticated) {
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push("/");
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  if (isLoading || !isAuthenticated) {
     return <AuthLoading />;
   }
 

@@ -33,10 +33,14 @@ const formSchema = z.object({
   }).email("Por favor ingresa un correo electrónico válido"),
   phone: z.string({
     required_error: "El teléfono es obligatorio",
-  }).regex(/^\+?[0-9]{10,15}$/, "Por favor ingresa un número de teléfono válido (10-15 dígitos, puede incluir + al inicio)")
+  }).regex(/^\+?[0-9]{10,15}$/, "Por favor ingresa un número de teléfono válido (10-15 dígitos, puede incluir + al inicio)"),
+  github_username: z.string({
+    required_error: "El usuario de GitHub es obligatorio",
+  }).min(1, "Por favor ingresa tu usuario de GitHub"),
+  linkedin_profile: z.string().optional(),
 })
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://tribu-back.pruebas-entrevistador-inteligente.site'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
 
 type ApiResponse = {
   status: string;
@@ -235,6 +239,48 @@ export function ResearcherForm() {
                         const value = e.target.value.replace(/[^\d+]/g, '')
                         field.onChange(value)
                       }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="github_username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base">Usuario de GitHub</FormLabel>
+                  <FormDescription>
+                    Tu nombre de usuario en GitHub
+                  </FormDescription>
+                  <FormControl>
+                    <Input 
+                      className="text-base px-4 py-2"
+                      placeholder="usuario-github"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="linkedin_profile"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base">Perfil de LinkedIn</FormLabel>
+                  <FormDescription>
+                    URL de tu perfil de LinkedIn (opcional)
+                  </FormDescription>
+                  <FormControl>
+                    <Input 
+                      className="text-base px-4 py-2"
+                      placeholder="https://linkedin.com/in/tu-perfil"
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />

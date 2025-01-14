@@ -2,12 +2,14 @@
 
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
-import { Calendar, Clock } from "lucide-react"
+import { Calendar, Clock, Github } from "lucide-react"
 
 interface Researcher {
   id: string
   name: string
-  image: string
+  avatarUrl: string
+  repositoryUrl: string
+  linkedinUrl: string
   role: string
   presentation: string
   date: string
@@ -17,57 +19,58 @@ interface Researcher {
 const researchers: Researcher[] = [
   {
     id: "1",
-    name: "ANDY",
-    image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6",
-    role: "Machine Learning Engineer",
-    presentation: "Redes Neuronales Avanzadas",
-    date: "20 Feb 2024",
-    time: "10:00 AM"
+    name: "JAMILTON QUINTERO",
+    avatarUrl: "https://avatars.githubusercontent.com/u/66916145?v=4",
+    repositoryUrl: "https://github.com/JamiltonQuintero",
+    linkedinUrl: "https://www.linkedin.com/in/jamilton-quintero-osorio/",
+    role: "IA tecnical Manager",
+    presentation: "N8N",
+    date: "21 Enero 2025",
+    time: "06:00 PM"
   },
   {
     id: "2",
-    name: "OLIVIA",
-    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb",
-    role: "Data Scientist",
-    presentation: "Análisis Predictivo",
-    date: "20 Feb 2024",
-    time: "11:00 AM"
+    name: "ANDRÉS CAICEDO",
+    avatarUrl: "https://avatars.githubusercontent.com/u/1103049?v=4",
+    repositoryUrl: "https://github.com/JamiltonQuintero",
+    linkedinUrl: "https://www.linkedin.com/in/andrescaicedom",
+    role: "CTO Metrocuadrado",
+    presentation: "CrewAI",
+    date: "21 Enero 2025",
+    time: "06:00 PM"
   },
   {
     id: "3",
-    name: "NOAH",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d",
-    role: "NLP Researcher",
-    presentation: "Procesamiento de Lenguaje Natural",
-    date: "20 Feb 2024",
-    time: "12:00 PM"
+    name: "ROGERT OVALLE",
+    avatarUrl: "https://avatars.githubusercontent.com/u/19242676?v=4",
+    repositoryUrl: "https://github.com/rogertovalle ",
+    linkedinUrl: "https://www.linkedin.com/in/rogertovalle/",
+    role: "AI Product Manager",
+    presentation: "PydanticAI",
+    date: "21 Enero 2025",
+    time: "06:00 PM"
   },
   {
     id: "4",
-    name: "ELIJAH",
-    image: "https://images.unsplash.com/photo-1522529599102-193c0d76b5b6",
-    role: "AI Ethics Researcher",
-    presentation: "Ética en IA",
-    date: "20 Feb 2024",
-    time: "2:00 PM"
+    name: "ORLANDO KUAN",
+    avatarUrl: "https://avatars.githubusercontent.com/u/58204194?v=4",
+    repositoryUrl: "https://github.com/DarkCodePE",
+    linkedinUrl: "https://www.linkedin.com/in/orlando-kuan-becerra-934356117/",
+    role: "Researcher & AI Specialist",
+    presentation: "GPT Researcher",
+    date: "21 Enero 2025",
+    time: "06:00 PM"
   },
   {
     id: "5",
-    name: "AVA",
-    image: "https://images.unsplash.com/photo-1534083220759-4c3c00112ea0",
-    role: "Computer Vision Expert",
-    presentation: "Visión por Computadora",
-    date: "20 Feb 2024",
-    time: "3:00 PM"
-  },
-  {
-    id: "6",
-    name: "HENRY",
-    image: "https://images.unsplash.com/photo-1512663150964-d8f43c899f76",
-    role: "Robotics Engineer",
-    presentation: "Robótica Cognitiva",
-    date: "20 Feb 2024",
-    time: "4:00 PM"
+    name: "JULIAN CASTRO",
+    avatarUrl: "https://avatars.githubusercontent.com/u/75430955?v=4",
+    repositoryUrl: "https://github.com/Jcasttrop",
+    linkedinUrl: "https://linkedin.com/in/jcasttrop",
+    role: "Data Scientist & Software Engineer",
+    presentation: "LangChain",
+    date: "21 Enero 2025",
+    time: "06:00 PM"
   }
 ]
 
@@ -89,7 +92,7 @@ function ResearcherCard({ researcher, index }: ResearcherCardProps) {
       <div className="flex h-full flex-col items-center justify-center p-3">
         <div className="relative aspect-square w-[50%] overflow-hidden rounded-full border-4 border-white/80">
           <img
-            src={researcher.image}
+            src={researcher.avatarUrl}
             alt={researcher.name}
             className="h-full w-full object-cover p-2"
           />
@@ -115,6 +118,16 @@ function ResearcherCard({ researcher, index }: ResearcherCardProps) {
                 <span>{researcher.time}</span>
               </div>
             </div>
+            
+            <a 
+              href={researcher.repositoryUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-flex items-center gap-1 text-xs text-white/60 hover:text-white/80 transition-colors"
+            >
+              <Github className="h-3 w-3" />
+              <span>GitHub Profile</span>
+            </a>
           </motion.div>
         </div>
       </div>
