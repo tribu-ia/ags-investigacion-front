@@ -1,9 +1,12 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Calendar, Clock, Github } from "lucide-react"
+import { Calendar, Clock } from "lucide-react"
 import Image from "next/image"
-
+import { Button } from "@/components/ui/button"
+import { GithubIcon } from "@/components/ui/github"
+import { LikeButton } from "@/components/ui/custom/shared/like-button"
+import Link from "next/link"
 interface Researcher {
   id: string
   name: string
@@ -118,32 +121,6 @@ function ResearcherCard({ researcher, index }: ResearcherCardProps) {
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: index * 0.1 }}
-          className="flex items-center justify-center gap-2"
-        >
-          <a
-            href={researcher.repositoryUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-white/60 hover:text-white/80 transition-colors"
-          >
-            <Github className="h-3 w-3" />
-            <span>GitHub Profile</span>
-          </a>
-          <button
-              onClick={() => {/* Add vote handling logic here */}}
-              className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/20 px-3 py-1 text-xs text-white hover:bg-purple-500/30 transition-colors"
-            >
-              <span>Vote</span>
-              <span className="rounded-full bg-purple-500/30 px-2 py-0.5">
-                {researcher.votes}
-              </span>
-            </button>
-        </motion.div>
-
-        <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           className="flex flex-col items-center justify-center gap-2 text-xs text-white/80"
@@ -159,6 +136,25 @@ function ResearcherCard({ researcher, index }: ResearcherCardProps) {
               <span>{researcher.time}</span>
             </div>
           </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: index * 0.1 }}
+          className="flex items-center justify-center gap-2"
+        >
+          <Button variant="outline" className="rounded-full" size="sm">
+            <Link
+              href={researcher.repositoryUrl}
+              target="_blank"
+              className="flex items-center gap-0.5"
+            >
+              <GithubIcon />
+              <span className="text-xs font-light">GitHub</span>
+            </Link>
+          </Button>
+          <LikeButton initialLiked={false} initialCount={researcher.votes} />
         </motion.div>
       </div>
     </motion.div>
