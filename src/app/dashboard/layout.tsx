@@ -1,6 +1,5 @@
 "use client";
 
-import { AuthProvider } from "@/providers/auth-provider";
 import { AppSidebar } from "@/components/ui/custom/sidebar/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import {
@@ -23,7 +22,6 @@ export default function DashboardLayout({
   const breadcrumbs = useBreadcrumbs();
 
   return (
-    <AuthProvider>
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
@@ -50,6 +48,5 @@ export default function DashboardLayout({
           <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
         </SidebarInset>
       </SidebarProvider>
-    </AuthProvider>
   );
 }
