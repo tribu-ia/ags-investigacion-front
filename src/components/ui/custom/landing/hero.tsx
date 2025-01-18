@@ -13,6 +13,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from 'lucide-react'
 import { Vector3, Group, Mesh, Clock, BufferAttribute } from "three"
+import axios from "axios"
+import { useRouter } from "next/navigation"
 
 interface FrameState {
   clock: Clock
@@ -267,14 +269,17 @@ function StatsSection() {
   });
 
   useEffect(() => {
-    fetch('http://localhost:8001/stats')
-      .then(res => res.json())
-      .then(data => {
+    const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+    
+    axios.get(`${baseURL}/stats`)
+      .then(({ data }) => {
         if (data.status === "success") {
           setStats(data.data);
         }
       })
-      .catch(error => console.error('Error fetching stats:', error));
+      .catch(() => {
+        // Handle error silently
+      });
   }, []);
 
   return (
@@ -296,6 +301,8 @@ function StatsSection() {
 }
 
 export function LandingHero() {
+  const router = useRouter()
+  
   return (
     <section className="relative min-h-[100vh] w-full overflow-hidden bg-black">
       {/* Canvas container */}
@@ -333,7 +340,7 @@ export function LandingHero() {
               <Button 
                 size="lg" 
                 className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
-                onClick={() => document.querySelector('#join-research')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => router.push("/dashboard/documentation/nuevo-agente")}
               >
                 Sé un Investigador
                 <ArrowRight className="ml-2 h-4 w-4" />

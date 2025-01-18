@@ -35,25 +35,26 @@ const data = {
           title: "Agente investigador",
           url: "/dashboard/centro-investigacion/agente",
         },
-        {
-          title: "Guias y recursos",
-          url: "/dashboard/centro-investigacion/guias",
-        }
+        // {
+        //   title: "Guias y recursos",
+        //   url: "/dashboard/centro-investigacion/guias",
+        // }
       ],
     },
     {
       title: "Documentation",
       url: "#",
       icon: BookOpen,
+      isActive: true,
       items: [
         {
           title: "Investigar nuevo agente",
           url: "/dashboard/documentation/nuevo-agente",
         },
-        {
-          title: "Mis investigaciones",
-          url: "/dashboard/documentation/mis-investigaciones",
-        },
+        // {
+        //   title: "Mis investigaciones",
+        //   url: "/dashboard/documentation/mis-investigaciones",
+        // },
         {
           title: "Proximos eventos",
           url: "/dashboard/documentation/eventos",
@@ -62,16 +63,16 @@ const data = {
     }
   ],
   navSecondary: [
-    {
-      title: "Support",
-      url: "#",
-      icon: LifeBuoy,
-    },
-    {
-      title: "Feedback",
-      url: "#",
-      icon: Send,
-    },
+    // {
+    //   title: "Support",
+    //   url: "#",
+    //   icon: LifeBuoy,
+    // },
+    // {
+    //   title: "Feedback",
+    //   url: "#",
+    //   icon: Send,
+    // },
   ],
 }
 

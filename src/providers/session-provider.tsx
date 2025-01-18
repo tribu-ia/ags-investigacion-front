@@ -1,9 +1,15 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Keycloak from "keycloak-js";
 import { AuthLoading } from "@/components/auth/auth-loading";
+
+declare global {
+  interface Window {
+    _keycloak: any;
+  }
+}
 
 type SessionContextType = {
   keycloak: Keycloak | null;
@@ -29,61 +35,103 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [keycloak, setKeycloak] = useState<Keycloak | null>(null);
   const [initialized, setInitialized] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    const kc = new Keycloak({
-      url: process.env.NEXT_PUBLIC_KEYCLOAK_URL,
-      realm: process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "",
-      clientId: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "",
-    });
+    let refreshInterval: NodeJS.Timeout;
+    
+    const initKeycloak = async () => {
 
-    kc.init({
-      onLoad: "check-sso",
-      silentCheckSsoRedirectUri: window.location.origin + "/silent-check-sso.html",
-      pkceMethod: "S256",
-      checkLoginIframe: false,
-    })
-      .then((auth) => {
+      const kc = new Keycloak({
+        url: process.env.NEXT_PUBLIC_KEYCLOAK_URL,
+        realm: process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "",
+        clientId: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "",
+      });
+
+      try {
+        const authenticated = await kc.init({
+          onLoad: "check-sso",
+          silentCheckSsoRedirectUri: window.location.origin + "/silent-check-sso.html",
+          pkceMethod: "S256",
+          checkLoginIframe: false,
+        });
+
         setKeycloak(kc);
         setInitialized(true);
+        window._keycloak = kc;
 
-        // Token refresh setup
-        if (auth) {
-          setInterval(() => {
-            kc.updateToken(70)
-              .then((refreshed) => {
-                if (refreshed) {
-                  console.log("Token refreshed");
-                }
-              })
-              .catch(() => {
-                console.error("Failed to refresh token");
-                router.push("/");
+        if (authenticated && kc.token) {
+          localStorage.setItem('kc_token', kc.token);
+          
+          refreshInterval = setInterval(async () => {
+            console.group('🔄 Token Refresh Attempt');
+            try {
+              const refreshed = await kc.updateToken(70);
+       
+              if (refreshed && kc.token) {
+                localStorage.setItem('kc_token', kc.token);
+
+              }
+            } catch (error) {
+              console.error('Failed to refresh token:', error);
+              clearInterval(refreshInterval);
+              localStorage.removeItem('kc_token');
+              kc.logout({
+                redirectUri: window.location.origin,
               });
+            }
+            console.groupEnd();
           }, 60000);
+        } else if (pathname.startsWith('/dashboard')) {
+          console.log('User not authenticated, redirecting to login');
+          await kc.login({
+            redirectUri: window.location.origin + pathname,
+          });
         }
-      })
-      .catch((error) => {
-        console.error("Keycloak init error:", error);
+      } catch (error) {
+        console.error('Keycloak initialization error:', error);
         setInitialized(true);
-      });
-  }, [router]);
+      }
+      console.groupEnd();
+    };
+
+    initKeycloak();
+
+    return () => {
+      console.log('Cleaning up Keycloak session');
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+      localStorage.removeItem('kc_token');
+    };
+  }, [pathname]);
 
   const login = () => {
     if (keycloak) {
       keycloak.login({
-        redirectUri: window.location.origin + window.location.pathname,
+        redirectUri: window.location.origin + "/dashboard",
       });
     }
+    console.groupEnd();
   };
 
   const logout = () => {
     if (keycloak) {
+      localStorage.removeItem('kc_token');
       keycloak.logout({
         redirectUri: window.location.origin,
       });
     }
+    console.groupEnd();
   };
+
+  if (!initialized) {
+    return <AuthLoading />;
+  }
+
+  if (pathname.startsWith('/dashboard') && !keycloak?.authenticated) {
+    return <AuthLoading />;
+  }
 
   return (
     <SessionContext.Provider
@@ -96,7 +144,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         logout,
       }}
     >
-      {initialized ? children : <AuthLoading />}
+      {children}
     </SessionContext.Provider>
   );
 } 

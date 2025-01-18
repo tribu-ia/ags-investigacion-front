@@ -2,8 +2,10 @@
 
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Github, MessageCircle } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export function CallToAction() {
+  const router = useRouter()
   return (
     <section id="call-to-action" className="w-full py-12 md:py-24 lg:py-32 bg-black">
       <div className="container px-4 md:px-6 mx-auto">
@@ -22,7 +24,7 @@ export function CallToAction() {
             <Button 
               size="lg" 
               className="w-full bg-blue-600 hover:bg-blue-700"
-              onClick={() => document.querySelector('#join-research')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => router.push("/dashboard/documentation/nuevo-agente")}
             >
               Únete como Investigador
               <ArrowRight className="ml-2 h-4 w-4" />

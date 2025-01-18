@@ -9,6 +9,7 @@ interface Researcher {
   name: string
   avatarUrl: string
   repositoryUrl: string
+  linkedinUrl: string
   role: string
   presentation: string
   date: string
@@ -18,63 +19,58 @@ interface Researcher {
 const researchers: Researcher[] = [
   {
     id: "1",
-    name: "ANDY",
+    name: "JAMILTON QUINTERO",
     avatarUrl: "https://avatars.githubusercontent.com/u/66916145?v=4",
     repositoryUrl: "https://github.com/JamiltonQuintero",
-    role: "Machine Learning Engineer",
-    presentation: "Redes Neuronales Avanzadas",
-    date: "20 Feb 2024",
-    time: "10:00 AM"
+    linkedinUrl: "https://www.linkedin.com/in/jamilton-quintero-osorio/",
+    role: "IA tecnical Manager",
+    presentation: "N8N",
+    date: "21 Enero 2025",
+    time: "06:00 PM"
   },
   {
     id: "2",
-    name: "OLIVIA",
-    avatarUrl: "https://avatars.githubusercontent.com/u/66916145?v=4",
+    name: "ANDRÉS CAICEDO",
+    avatarUrl: "https://avatars.githubusercontent.com/u/1103049?v=4",
     repositoryUrl: "https://github.com/JamiltonQuintero",
-    role: "Data Scientist",
-    presentation: "Análisis Predictivo",
-    date: "20 Feb 2024",
-    time: "11:00 AM"
+    linkedinUrl: "https://www.linkedin.com/in/andrescaicedom",
+    role: "CTO Metrocuadrado",
+    presentation: "CrewAI",
+    date: "21 Enero 2025",
+    time: "06:00 PM"
   },
   {
     id: "3",
-    name: "NOAH",
-    avatarUrl: "https://avatars.githubusercontent.com/u/66916145?v=4",
-    repositoryUrl: "https://github.com/JamiltonQuintero",
-    role: "NLP Researcher",
-    presentation: "Procesamiento de Lenguaje Natural",
-    date: "20 Feb 2024",
-    time: "12:00 PM"
+    name: "ROGERT OVALLE",
+    avatarUrl: "https://avatars.githubusercontent.com/u/19242676?v=4",
+    repositoryUrl: "https://github.com/rogertovalle ",
+    linkedinUrl: "https://www.linkedin.com/in/rogertovalle/",
+    role: "AI Product Manager",
+    presentation: "PydanticAI",
+    date: "21 Enero 2025",
+    time: "06:00 PM"
   },
   {
     id: "4",
-    name: "ELIJAH",
-    avatarUrl: "https://avatars.githubusercontent.com/u/66916145?v=4",
-    repositoryUrl: "https://github.com/JamiltonQuintero",
-    role: "AI Ethics Researcher",
-    presentation: "Ética en IA",
-    date: "20 Feb 2024",
-    time: "2:00 PM"
+    name: "ORLANDO KUAN",
+    avatarUrl: "https://avatars.githubusercontent.com/u/58204194?v=4",
+    repositoryUrl: "https://github.com/DarkCodePE",
+    linkedinUrl: "https://www.linkedin.com/in/orlando-kuan-becerra-934356117/",
+    role: "Researcher & AI Specialist",
+    presentation: "GPT Researcher",
+    date: "21 Enero 2025",
+    time: "06:00 PM"
   },
   {
     id: "5",
-    name: "AVA",
-    avatarUrl: "https://avatars.githubusercontent.com/u/66916145?v=4",
-    repositoryUrl: "https://github.com/JamiltonQuintero",
-    role: "Computer Vision Expert",
-    presentation: "Visión por Computadora",
-    date: "20 Feb 2024",
-    time: "3:00 PM"
-  },
-  {
-    id: "6",
-    name: "HENRY",
-    avatarUrl: "https://avatars.githubusercontent.com/u/66916145?v=4",
-    repositoryUrl: "https://github.com/JamiltonQuintero",
-    role: "Robotics Engineer",
-    presentation: "Robótica Cognitiva",
-    date: "20 Feb 2024",
-    time: "4:00 PM"
+    name: "JULIAN CASTRO",
+    avatarUrl: "https://avatars.githubusercontent.com/u/75430955?v=4",
+    repositoryUrl: "https://github.com/Jcasttrop",
+    linkedinUrl: "https://linkedin.com/in/jcasttrop",
+    role: "Data Scientist & Software Engineer",
+    presentation: "LangChain",
+    date: "21 Enero 2025",
+    time: "06:00 PM"
   }
 ]
 

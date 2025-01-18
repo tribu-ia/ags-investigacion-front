@@ -2,7 +2,7 @@
 FROM node:18-buster AS builder
 WORKDIR /usr/src/app
 COPY package.json package-lock.json* ./
-RUN npm ci --legacy-peer-deps
+RUN npm ci 
 COPY . .
 RUN npm run build
 

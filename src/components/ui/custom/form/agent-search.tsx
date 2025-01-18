@@ -18,6 +18,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { z } from "zod"
+import { useApi } from "@/hooks/use-api"
 
 type Agent = {
   value: string
@@ -72,6 +73,7 @@ const agentsCache = {
 }
 
 export function AgentSearch({ onSelect }: AgentSearchProps) {
+  const api = useApi()
   const [open, setOpen] = React.useState(false)
   const [value, setValue] = React.useState("")
   const [agents, setAgents] = React.useState<Agent[]>([])
@@ -115,10 +117,7 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
       }
 
       setLoading(true)
-      const response = await fetch(
-        `${API_BASE_URL}/agents?page=${page}&page_size=${PAGE_SIZE}`
-      )
-      const data: AgentsResponse = await response.json()
+      const { data } = await api.get<AgentsResponse>(`/agents?page=${page}&page_size=${PAGE_SIZE}`)
 
       const newAgents = data.items.map(item => ({
         value: item.id,
@@ -135,11 +134,11 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
       setHasMore(data.page < data.total_pages)
       setPage(p => p + 1)
     } catch (error) {
-      console.error('Error loading agents:', error)
+      // Handle error silently
     } finally {
       setLoading(false)
     }
-  }, [page, hasMore, loading])
+  }, [page, hasMore, loading, api])
 
   // Manejar búsqueda
   const handleSearch = React.useCallback((term: string) => {
@@ -178,21 +177,10 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true)
     try {
-      // Enviar el ID real del agente (value), no el searchTerm
-      const response = await fetch(`${API_BASE_URL}/investigadores`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...values,
-          agent: values.agent,  // agent proviene del formulario parseado, idealmente es 'value'
-        })
+      await api.post('/investigadores', {
+        ...values,
+        agent: values.agent,
       })
-
-      if (!response.ok) {
-        throw new Error('Error al enviar el formulario')
-      }
 
       // Mostrar QR y limpiar formulario
       setShowQR(true)
@@ -204,8 +192,7 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
       })
       setShowForm(false)
     } catch (error) {
-      console.error('Error:', error)
-      // Aquí podrías mostrar un mensaje de error al usuario
+      // Handle error silently
     } finally {
       setIsSubmitting(false)
     }
@@ -220,8 +207,7 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
       await onSubmit(validatedData)
     } catch (error) {
       if (error instanceof z.ZodError) {
-        console.error('Validation error:', error.errors)
-        // Mostrar los errores de validación al usuario si quieres
+        // Handle validation errors silently
       }
     }
   }
