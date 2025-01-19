@@ -39,7 +39,7 @@ const researchers: Researcher[] = [
     avatarUrl: "https://avatars.githubusercontent.com/u/1103049?v=4",
     repositoryUrl: "https://github.com/JamiltonQuintero",
     linkedinUrl: "https://www.linkedin.com/in/andrescaicedom",
-    role: "CTO Metrocuadrado",
+    role: "CTO - AI Enthusiast",
     presentation: "CrewAI",
     date: "21 Enero 2025",
     time: "06:00 PM",

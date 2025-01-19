@@ -271,10 +271,10 @@ function StatsSection() {
   useEffect(() => {
     const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
     
-    axios.get(`${baseURL}/stats`)
+    axios.get(`${baseURL}/agents/stats`)
       .then(({ data }) => {
-        if (data.status === "success") {
-          setStats(data.data);
+        if (data) {
+          setStats(data);
         }
       })
       .catch(() => {
