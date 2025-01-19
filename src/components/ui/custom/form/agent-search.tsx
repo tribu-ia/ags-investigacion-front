@@ -28,7 +28,7 @@ type Agent = {
 }
 
 interface AgentsResponse {
-  items: Array<{
+  data: Array<{
     isAssigned: boolean
     id: string
     name: string
@@ -44,7 +44,7 @@ type AgentSearchProps = {
   onSelect: (value: string) => void
 }
 
-const PAGE_SIZE = 600
+const PAGE_SIZE = 1000
 
 // Tipo para el payload del investigador
 type InvestigadorPayload = {
@@ -117,9 +117,9 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
       }
 
       setLoading(true)
-      const { data } = await api.get<AgentsResponse>(`/agents?page=${page}&page_size=${PAGE_SIZE}`)
+      const { data } = await api.get<AgentsResponse>(`/agents?page=${page}&pageSize=${PAGE_SIZE}`)
 
-      const newAgents = data.items.map(item => ({
+      const newAgents = data.data.map(item => ({
         value: item.id,
         label: item.name,
         category: item.category,
