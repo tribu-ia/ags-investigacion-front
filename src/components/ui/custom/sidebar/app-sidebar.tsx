@@ -34,10 +34,10 @@ const data = {
           title: "Agente investigador",
           url: "/dashboard/centro-investigacion/agente",
         },
-        // {
-        //   title: "Guias y recursos",
-        //   url: "/dashboard/centro-investigacion/guias",
-        // }
+        {
+        title: "Guias y recursos",
+         url: "/dashboard/centro-investigacion/guias",
+         }
       ],
     },
     {
