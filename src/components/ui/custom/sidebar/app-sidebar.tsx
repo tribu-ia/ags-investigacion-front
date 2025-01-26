@@ -34,10 +34,10 @@ const data = {
           title: "Agente investigador",
           url: "/dashboard/centro-investigacion/agente",
         },
-        {
-          title: "Guias y recursos",
-          url: "/dashboard/centro-investigacion/guias",
-        }
+        // {
+        //   title: "Guias y recursos",
+        //   url: "/dashboard/centro-investigacion/guias",
+        // }
       ],
     },
     {
@@ -50,10 +50,10 @@ const data = {
           title: "Investigar nuevo agente",
           url: "/dashboard/documentation/nuevo-agente",
         },
-        {
-          title: "Mis investigaciones",
-          url: "/dashboard/documentation/mis-investigaciones",  
-        },
+        // {
+        //   title: "Mis investigaciones",
+        //   url: "/dashboard/documentation/mis-investigaciones",  
+        // },
         {
           title: "Proximos eventos",
           url: "/dashboard/documentation/eventos",

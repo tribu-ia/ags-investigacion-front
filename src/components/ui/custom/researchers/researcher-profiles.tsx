@@ -1,78 +1,27 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { Calendar, Clock, Github } from "lucide-react"
+import { useApi } from "@/hooks/use-api"
 
 interface Researcher {
   id: string
   name: string
   avatarUrl: string
   repositoryUrl: string
-  linkedinUrl: string
+  linkedinUrl: string | null
   role: string
   presentation: string
-  date: string
-  time: string
+  presentationDateTime: string
 }
 
-const researchers: Researcher[] = [
-  {
-    id: "1",
-    name: "Cristian Cordoba",
-    avatarUrl: "https://avatars.githubusercontent.com/u/26011541?v=4",
-    repositoryUrl: "https://github.com/cdcordobaa",
-    linkedinUrl: "https://www.linkedin.com/in/cdcordobaa-software-engineer/",
-    role: "Pendiente",
-    presentation: "PaperToPodcast",
-    date: "28 Enero 2025",
-    time: "06:00 PM"
-  },
-  {
-    id: "2",
-    name: "Andrés Mauricio González",
-    avatarUrl: "https://avatars.githubusercontent.com/u/20363147?v=4",
-    repositoryUrl: "https://github.com/amgonzalezvargas",
-    linkedinUrl: "https://www.linkedin.com/in/andresgonzalezvargas",
-    role: "Pendiente",
-    presentation: "F/MS Startup Game",
-    date: "28 Enero 2025",
-    time: "06:00 PM"
-  },
-  {
-    id: "3",
-    name: "Germán Rueda",
-    avatarUrl: "https://avatars.githubusercontent.com/u/18647966?v=4",
-    repositoryUrl: "hhttps://github.com/gmanmia",
-    linkedinUrl: "https://github.com/gmanmia",
-    role: "Pendiente",
-    presentation: "AutoGPT",
-    date: "28 Enero 2025",
-    time: "06:00 PM"
-  },
-  {
-    id: "4",
-    name: "Ana Milena Alonso C",
-    avatarUrl: "https://avatars.githubusercontent.com/u/182042934?v=4",
-    repositoryUrl: "https://github.com/anami283",
-    linkedinUrl: "https://www.linkedin.com/in/ana-milena-alonso-cantor-7b878233/",
-    role: "Pendiente",
-    presentation: "Eidolon AI",
-    date: "28 Enero 2025",
-    time: "06:00 PM"
-  },
-  {
-    id: "5",
-    name: "Alejandro Ospina",
-    avatarUrl: "https://avatars.githubusercontent.com/u/31941679?v=4",
-    repositoryUrl: "https://github.com/aleospina",
-    linkedinUrl: "",
-    role: "Pendiente",
-    presentation: "Wordware",
-    date: "28 Enero 2025",
-    time: "06:00 PM"
-  }
-]
+interface ResearcherResponse {
+  weekStart: string
+  weekEnd: string
+  presentations: Researcher[]
+}
 
 interface ResearcherCardProps {
   researcher: Researcher
@@ -136,6 +85,37 @@ function ResearcherCard({ researcher, index }: ResearcherCardProps) {
 }
 
 export function ResearcherProfiles() {
+  const api = useApi()
+  const [researchers, setResearchers] = useState<Researcher[]>([])
+  const [weekEnd, setWeekEnd] = useState<string>("")
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchResearchers = async () => {
+      try {
+        const { data } = await api.get<ResearcherResponse>('/researchers-managements/presentations/current-week')
+        setResearchers(data.presentations)
+        setWeekEnd(data.weekEnd)
+      } catch (error) {
+        console.error('Error fetching researchers:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchResearchers()
+  }, [api])
+
+  const formatDateTime = (dateTimeStr: string) => {
+    const date = new Date(dateTimeStr)
+    const time = date.toLocaleTimeString('es-CO', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    }).toUpperCase()
+    return time
+  }
+
   return (
     <div className="relative h-full w-full">
       {/* Gradient background */}
@@ -146,7 +126,15 @@ export function ResearcherProfiles() {
       {/* Grid de investigadores */}
       <div className="relative h-full grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 auto-rows-fr">
         {researchers.map((researcher, index) => (
-          <ResearcherCard key={researcher.id} researcher={researcher} index={index} />
+          <ResearcherCard 
+            key={researcher.id} 
+            researcher={{
+              ...researcher,
+              date: weekEnd,
+              time: formatDateTime(researcher.presentationDateTime)
+            }} 
+            index={index} 
+          />
         ))}
       </div>
     </div>
