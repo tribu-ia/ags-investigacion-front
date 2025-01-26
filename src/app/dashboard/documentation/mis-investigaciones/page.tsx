@@ -1,20 +1,5 @@
 "use client";
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import { AppSidebar } from "@/components/ui/custom/sidebar/app-sidebar";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -57,81 +42,57 @@ export default function MisInvestigacionesPage() {
   };
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/dashboard/documentation">
-                    Documentation
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Mis Investigaciones</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-        </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="space-y-4">
-            <h1 className="text-3xl font-bold">Mis Investigaciones</h1>
-            <p className="text-muted-foreground">
-              Gestiona y monitorea tus investigaciones en curso.
-            </p>
-          </div>
-          
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {investigaciones.map((inv, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge variant="outline">{inv.type}</Badge>
-                    <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(inv.status)}`}>
-                      {inv.status}
-                    </span>
+    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+      <div className="space-y-4">
+        <h1 className="text-3xl font-bold">Mis Investigaciones</h1>
+        <p className="text-muted-foreground">
+          Gestiona y monitorea tus investigaciones en curso.
+        </p>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {investigaciones.map((inv, index) => (
+          <Card key={index} className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="flex items-center justify-between mb-2">
+                <Badge variant="outline">{inv.type}</Badge>
+                <span
+                  className={`text-xs px-2 py-1 rounded-full ${getStatusColor(
+                    inv.status
+                  )}`}
+                >
+                  {inv.status}
+                </span>
+              </div>
+              <CardTitle className="text-xl">{inv.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Progreso</span>
+                    <span className="font-medium">{inv.progress}%</span>
                   </div>
-                  <CardTitle className="text-xl">{inv.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Progreso</span>
-                        <span className="font-medium">{inv.progress}%</span>
-                      </div>
-                      <div className="h-2 bg-secondary rounded-full">
-                        <div
-                          className="h-full bg-primary rounded-full transition-all"
-                          style={{ width: `${inv.progress}%` }}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">
-                        Última actualización: {inv.lastUpdate}
-                      </span>
-                      <button className="text-primary hover:underline text-sm">
-                        Ver detalles →
-                      </button>
-                    </div>
+                  <div className="h-2 bg-secondary rounded-full">
+                    <div
+                      className="h-full bg-primary rounded-full transition-all"
+                      style={{ width: `${inv.progress}%` }}
+                    />
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">
+                    Última actualización: {inv.lastUpdate}
+                  </span>
+                  <button className="text-primary hover:underline text-sm">
+                    Ver detalles →
+                  </button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
   );
-} 
+}

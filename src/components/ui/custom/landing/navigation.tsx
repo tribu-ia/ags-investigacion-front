@@ -41,21 +41,28 @@ export function Navigation() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <nav className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between md:justify-center relative">
+        <div className="flex h-16 items-center justify-between md:justify-start relative">
           {/* Logo y navegación principal */}
-          <div className="flex items-center justify-center gap-12">
+          <div className="flex items-center justify-start gap-12 flex-grow">
             <Link href="/" className="flex items-center gap-2 absolute left-4 md:static">
-              <Brain className="h-6 w-6" />
-              <span className="text-xl font-bold">Agentes Tribu IA</span>
+              <div className="w-[35vw] md:w-[15vw] aspect-square relative -mt-[4vh] -mb-[4vh] md:-mt-[2vh] md:-mb-[2vh]">
+                <Image 
+                  src="/logo_2.png" 
+                  alt="TribuIA Logo" 
+                  fill
+                  className="rounded-full object-contain"
+                  priority
+                />
+              </div>
             </Link>
             {/* Navegación desktop */}
-            <div className="hidden md:flex items-center justify-center gap-12">
+            <div className="hidden md:flex items-center justify-center gap-12 ml-auto mr-[18vw]">
               {navigationLinks.map((link) => (
                 <a
                   key={link.title}
                   href={link.href}
                   onClick={(e) => handleClick(e, link.href)}
-                  className="text-sm font-medium transition-colors hover:text-primary"
+                  className="text-sm font-medium transition-colors hover:text-primary whitespace-nowrap"
                 >
                   {link.title}
                 </a>
@@ -63,33 +70,28 @@ export function Navigation() {
             </div>
           </div>
 
-          {/* Link a TribuIA */}
-          <a
+          {/* By TribuIA texto - visible en desktop */}
+          <Link
             href="https://tribuia.org"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden md:flex items-center gap-2 absolute right-4 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+            className="hidden md:flex items-center absolute right-4 z-10"
           >
-            By <span className="font-semibold">TribuIA</span>
-            <div className="h-10 w-10 relative">
-              <Image 
-                src="/logo.png" 
-                alt="TribuIA Logo" 
-                fill
-                className="rounded-full object-contain"
-              />
-            </div>
-          </a>
+            <span className="text-sm font-medium">By TribuIA</span>
+          </Link>
 
           {/* Botón menú móvil */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden absolute right-4"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center md:hidden">
+            <span className="text-sm font-medium mr-4">By TribuIA</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
 
         {/* Menú móvil */}
@@ -106,22 +108,6 @@ export function Navigation() {
                   {link.title}
                 </a>
               ))}
-              <a
-                href="https://tribuia.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary px-4 py-2"
-              >
-                By TribuIA
-                <div className="h-8 w-8 relative">
-                  <Image 
-                    src="/logo.png" 
-                    alt="TribuIA Logo" 
-                    fill
-                    className="rounded-full object-contain"
-                  />
-                </div>
-              </a>
             </div>
           </div>
         )}

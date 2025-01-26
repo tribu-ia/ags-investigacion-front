@@ -48,7 +48,7 @@
     "react-markdown": "^9.0.1",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
-    "three": "^0.172.0",
+    "three": "^0.159.0",
     "three-mesh-bvh": "^0.9.0",
     "zod": "^3.23.8"
   },

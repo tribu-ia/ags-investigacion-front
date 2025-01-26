@@ -80,7 +80,7 @@ export function ResearcherForm() {
         email: profile?.email
       }
 
-      const { data } = await api.post('/investigadores', formDataWithEmail)
+      const { data } = await api.post('/researchers-managements/researchers', formDataWithEmail)
 
       // Verificar si hay error en la respuesta
       if (data.data && !data.data.success) {
