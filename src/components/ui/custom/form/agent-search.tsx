@@ -28,7 +28,7 @@ type Agent = {
 }
 
 interface AgentsResponse {
-  data: Array<{
+  content: Array<{
     isAssigned: boolean
     id: string
     name: string
@@ -117,9 +117,9 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
       }
 
       setLoading(true)
-      const { data } = await api.get<AgentsResponse>(`/agents?page=${page}&pageSize=${PAGE_SIZE}`)
+      const { data } = await api.get<AgentsResponse>(`/researchers-managements/agents?page=${page}&page_size=${PAGE_SIZE}`)
 
-      const newAgents = data.data.map(item => ({
+      const newAgents = data.content.map(item => ({
         value: item.id,
         label: item.name,
         category: item.category,
@@ -177,7 +177,7 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true)
     try {
-      await api.post('/investigadores', {
+      await api.post('/researchers-managements/researchers', {
         ...values,
         agent: values.agent,
       })

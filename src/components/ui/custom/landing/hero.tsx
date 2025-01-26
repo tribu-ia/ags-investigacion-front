@@ -271,7 +271,7 @@ function StatsSection() {
   useEffect(() => {
     const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
     
-    axios.get(`${baseURL}/agents/stats`)
+    axios.get(`${baseURL}/researchers-managements/agents/stats`)
       .then(({ data }) => {
         if (data) {
           setStats(data);
@@ -282,7 +282,7 @@ function StatsSection() {
       });
   }, []);
 
-  return (
+  return ( 
     <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-12 mt-8">
       <div className="flex flex-col items-center">
         <span className="text-3xl font-bold text-white">{stats.total_agents}</span>
@@ -293,7 +293,7 @@ function StatsSection() {
         <span className="text-sm text-muted-foreground">Investigadores Activos</span>
       </div>
       <div className="flex flex-col items-center">
-        <span className="text-3xl font-bold text-white">{stats.documented_agents}</span>
+        <span className="text-3xl font-bold text-white">5</span>
         <span className="text-sm text-muted-foreground">Agentes Documentados</span>
       </div>
     </div>
