@@ -20,6 +20,13 @@ import Image from "next/image"
 import { AgentSearch } from "@/components/ui/custom/form/agent-search"
 import { useAuth } from "@/hooks/use-auth"
 import { useApi } from "@/hooks/use-api"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Calendar, Clock, Github, Linkedin } from "lucide-react"
 
 const formSchema = z.object({
   agent: z.string({
@@ -51,11 +58,32 @@ type ApiResponse = {
   }
 }
 
+type SuccessResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    githubUsername: string;
+    avatarUrl: string;
+    repositoryUrl: string;
+    linkedinProfile: string | null;
+    agentId: string;
+    status: string;
+  };
+  errorType: string | null;
+  errorCode: string | null;
+  presentationDateTime: string;
+}
+
 export function ResearcherForm() {
-  const [showQR, setShowQR] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [refreshAgentKey, setRefreshAgentKey] = useState(0)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [successData, setSuccessData] = useState<SuccessResponse | null>(null)
   const { profile } = useAuth()
   const api = useApi()
   
@@ -80,24 +108,17 @@ export function ResearcherForm() {
         email: profile?.email
       }
 
-      const { data } = await api.post('/researchers-managements/researchers', formDataWithEmail)
+      const { data } = await api.post<SuccessResponse>('/researchers-managements/researchers', formDataWithEmail)
 
-      // Verificar si hay error en la respuesta
-      if (data.data && !data.data.success) {
-        throw new Error(data.data.message)
+      if (!data.success) {
+        throw new Error(data.message || 'Error al enviar el formulario')
       }
 
-      // Si todo está bien, limpiar el formulario y mostrar QR
-      form.reset({
-        agent: '',
-        name: '',
-        phone: ''
-      })
-
+      setSuccessData(data)
+      setShowSuccessModal(true)
+      form.reset()
       setRefreshAgentKey(prev => prev + 1)
-      setShowQR(true)
     } catch (error: any) {
-      console.error('Error:', error)
       setErrorMessage(
         error.response?.data?.message || 
         error.message || 
@@ -108,256 +129,308 @@ export function ResearcherForm() {
     }
   }
 
+  const formatDateTime = (dateTimeStr: string) => {
+    const date = new Date(dateTimeStr)
+    return date.toLocaleDateString('es-CO', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    })
+  }
+
   return (
-    <Card className="mt-4">
-      <CardContent className="p-6">
-        {errorMessage && (
-          <div className="mb-4 p-4 border border-red-400 bg-red-50 text-red-700 rounded-md flex items-center gap-2">
-            <svg 
-              width="20" 
-              height="20" 
-              viewBox="0 0 20 20" 
-              fill="none" 
-              xmlns="http://www.w3.org/2000/svg"
-              className="flex-shrink-0"
-            >
-              <path 
-                d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
+    <>
+      <Card className="mt-4">
+        <CardContent className="p-6">
+          {errorMessage && (
+            <div className="mb-4 p-4 border border-red-400 bg-red-50 text-red-700 rounded-md flex items-center gap-2">
+              <svg 
+                width="20" 
+                height="20" 
+                viewBox="0 0 20 20" 
+                fill="none" 
+                xmlns="http://www.w3.org/2000/svg"
+                className="flex-shrink-0"
+              >
+                <path 
+                  d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+                <path 
+                  d="M10 6.5V10" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+                <circle 
+                  cx="10" 
+                  cy="13.5" 
+                  r="0.5" 
+                  fill="currentColor" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span className="flex-1">{errorMessage}</span>
+            </div>
+          )}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="agent"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Selecciona un Agente de Investigación</FormLabel>
+                    <FormControl>
+                      <AgentSearch 
+                        key={refreshAgentKey}
+                        onSelect={field.onChange} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              <path 
-                d="M10 6.5V10" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
+
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base">Nombre Completo</FormLabel>
+                    <FormDescription>
+                      Nombre registrado en el sistema
+                    </FormDescription>
+                    <FormControl>
+                      <Input 
+                        className="text-base px-4 py-2 bg-muted"
+                        placeholder="Ej: Juan Pérez" 
+                        readOnly
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              <circle 
-                cx="10" 
-                cy="13.5" 
-                r="0.5" 
-                fill="currentColor" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
+
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base">Correo Electrónico</FormLabel>
+                    <FormDescription>
+                      Correo registrado en el sistema
+                    </FormDescription>
+                    <FormControl>
+                      <Input 
+                        className="text-base px-4 py-2 bg-muted"
+                        type="email"
+                        placeholder="correo@ejemplo.com"
+                        readOnly
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </svg>
-            <span className="flex-1">{errorMessage}</span>
-          </div>
-        )}
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="agent"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Selecciona un Agente de Investigación</FormLabel>
-                  <FormControl>
-                    <AgentSearch 
-                      key={refreshAgentKey}
-                      onSelect={field.onChange} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base">Nombre Completo</FormLabel>
-                  <FormDescription>
-                    Nombre registrado en el sistema
-                  </FormDescription>
-                  <FormControl>
-                    <Input 
-                      className="text-base px-4 py-2 bg-muted"
-                      placeholder="Ej: Juan Pérez" 
-                      readOnly
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base">Teléfono</FormLabel>
+                    <FormDescription>
+                      Formato: +57 300 123 4567
+                    </FormDescription>
+                    <FormControl>
+                      <Input 
+                        className="text-base px-4 py-2"
+                        type="tel"
+                        placeholder="+573001234567"
+                        {...field}
+                        onChange={(e) => {
+                          // Permitir solo números y el signo +
+                          const value = e.target.value.replace(/[^\d+]/g, '')
+                          field.onChange(value)
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base">Correo Electrónico</FormLabel>
-                  <FormDescription>
-                    Correo registrado en el sistema
-                  </FormDescription>
-                  <FormControl>
-                    <Input 
-                      className="text-base px-4 py-2 bg-muted"
-                      type="email"
-                      placeholder="correo@ejemplo.com"
-                      readOnly
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="github_username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base">Usuario de GitHub</FormLabel>
+                    <FormDescription>
+                      Tu nombre de usuario en GitHub
+                    </FormDescription>
+                    <FormControl>
+                      <Input 
+                        className="text-base px-4 py-2"
+                        placeholder="usuario-github"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base">Teléfono</FormLabel>
-                  <FormDescription>
-                    Formato: +57 300 123 4567
-                  </FormDescription>
-                  <FormControl>
-                    <Input 
-                      className="text-base px-4 py-2"
-                      type="tel"
-                      placeholder="+573001234567"
-                      {...field}
-                      onChange={(e) => {
-                        // Permitir solo números y el signo +
-                        const value = e.target.value.replace(/[^\d+]/g, '')
-                        field.onChange(value)
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="linkedin_profile"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base">Perfil de LinkedIn</FormLabel>
+                    <FormDescription>
+                      URL de tu perfil de LinkedIn (opcional)
+                    </FormDescription>
+                    <FormControl>
+                      <Input 
+                        className="text-base px-4 py-2"
+                        placeholder="https://linkedin.com/in/tu-perfil"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="github_username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base">Usuario de GitHub</FormLabel>
-                  <FormDescription>
-                    Tu nombre de usuario en GitHub
-                  </FormDescription>
-                  <FormControl>
-                    <Input 
-                      className="text-base px-4 py-2"
-                      placeholder="usuario-github"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <Button 
+                type="submit" 
+                className="w-full"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
 
-            <FormField
-              control={form.control}
-              name="linkedin_profile"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base">Perfil de LinkedIn</FormLabel>
-                  <FormDescription>
-                    URL de tu perfil de LinkedIn (opcional)
-                  </FormDescription>
-                  <FormControl>
-                    <Input 
-                      className="text-base px-4 py-2"
-                      placeholder="https://linkedin.com/in/tu-perfil"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button 
-              type="submit" 
-              className="w-full"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}
-            </Button>
-          </form>
-        </Form>
-
-        {showQR && (
-          <div className="mt-8 border rounded-lg bg-white p-6 shadow-sm">
-            <div className="text-center">
-              <h3 className="text-xl font-semibold mb-3">
-                Únete a nuestro Grupo de WhatsApp
-              </h3>
-              <p className="text-sm text-muted-foreground mb-6">
-                Escanea este código QR o haz clic en el enlace para unirte a nuestra comunidad de investigación
-              </p>
-              
-              <div className="flex flex-col items-center gap-6">
-                <div className="relative">
-                  <Image
-                    src="/QR.jpeg"
-                    alt="Código QR de WhatsApp"
-                    width={200}
-                    height={200}
-                    className="rounded-lg shadow-md"
+      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-center">¡Bienvenido a TribuIA/Agentes! ahora eres un investigador</DialogTitle>
+              <br />
+          </DialogHeader>
+          
+          <div className="grid gap-6 sm:grid-cols-2">
+            {/* Perfil del Investigador */}
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-violet-500/10 to-purple-500/10 p-6">
+              <div className="flex flex-col items-center">
+                <div className="relative aspect-square w-32 overflow-hidden rounded-full border-4 border-white/80">
+                  <img
+                    src={successData?.data.avatarUrl}
+                    alt={successData?.data.name}
+                    className="h-full w-full object-cover"
                   />
                 </div>
                 
-                <div className="flex items-center gap-2">
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="text-green-600"
-                  >
-                    <path
-                      d="M3.9 12C3.9 10.29 4.29 8.6 5.07 7.04L3.82 3.93L7.02 5.18C8.57 4.4 10.27 4 12 4C16.97 4 21 8.03 21 13C21 17.97 16.97 22 12 22C7.03 22 3 17.97 3 13C3 12.66 3.03 12.33 3.07 12H3.9Z"
-                      fill="currentColor"
-                    />
-                  </svg>
+                <div className="mt-4 text-center">
+                  <h3 className="text-xl font-bold">{successData?.data.name}</h3>
+                  <p className="text-sm text-muted-foreground">Tu fecha TENTATIVA de presentación es:</p>
                   
-                  <a 
-                    href="https://chat.whatsapp.com/Kxi3ftAYymLJ79YbYR6vXm"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-green-600 hover:text-green-700 font-medium transition-colors duration-200 flex items-center gap-1"
-                  >
-                    Unirte al grupo de WhatsApp
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="inline-block"
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center justify-center gap-2 text-sm">
+                      <Calendar className="h-4 w-4" />
+                      <span>
+                        {successData?.presentationDateTime && 
+                          formatDateTime(successData.presentationDateTime)}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 flex justify-center gap-4">
+                    <p className="text-sm text-muted-foreground">Tus redes:</p>
+                    <a
+                      href={successData?.data.repositoryUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary"
                     >
-                      <path
-                        d="M7 17L17 7M17 7H7M17 7V17"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </a>
+                      <Github className="h-5 w-5" />
+                    </a>
+                    {successData?.data.linkedinProfile && (
+                      <a
+                        href={successData.data.linkedinProfile}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-primary"
+                      >
+                        <Linkedin className="h-5 w-5" />
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* QR y Grupo de Discord */}
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <h4 className="text-lg font-semibold">
+                Únete a nuestro Grupo de Discord
+              </h4>
+              <p className="text-sm text-muted-foreground text-center">
+                Escanea este código QR o haz clic en el enlace para unirte a nuestra comunidad
+              </p>
+              
+              <div className="relative">
+                <Image
+                  src="/QR.png"
+                  alt="Código QR de Discord"
+                  width={200}
+                  height={200}
+                  className="rounded-lg shadow-md"
+                />
+              </div>
+              
+              <a 
+                href="https://discord.gg/VJzNePg4fB"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-green-600 hover:text-green-700"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="text-green-600"
+                >
+                  <path
+                    d="M3.9 12C3.9 10.29 4.29 8.6 5.07 7.04L3.82 3.93L7.02 5.18C8.57 4.4 10.27 4 12 4C16.97 4 21 8.03 21 13C21 17.97 16.97 22 12 22C7.03 22 3 17.97 3 13C3 12.66 3.03 12.33 3.07 12H3.9Z"
+                    fill="currentColor"
+                  />
+                </svg>
+                Unirte al grupo de Discord
+              </a>
+            </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
