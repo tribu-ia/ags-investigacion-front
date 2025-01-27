@@ -50,10 +50,10 @@ const data = {
           title: "Investigar nuevo agente",
           url: "/dashboard/documentation/nuevo-agente",
         },
-        // {
-        //   title: "Mis investigaciones",
-        //   url: "/dashboard/documentation/mis-investigaciones",  
-        // },
+        {
+          title: "Mis investigaciones",
+          url: "/dashboard/documentation/mis-investigaciones",  
+        },
         {
           title: "Proximos eventos",
           url: "/dashboard/documentation/eventos",
