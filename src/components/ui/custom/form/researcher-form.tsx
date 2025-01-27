@@ -28,26 +28,6 @@ import {
 } from "@/components/ui/dialog"
 import { Calendar, Clock, Github, Linkedin } from "lucide-react"
 
-interface SuccessResponse {
-  success: boolean;
-  message: string;
-  data: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    githubUsername: string;
-    avatarUrl: string;
-    repositoryUrl: string;
-    linkedinProfile: string | null;
-    agentId: string;
-    status: string;
-  };
-  errorType: string | null;
-  errorCode: string | null;
-  presentationDateTime: string;
-}
-
 const formSchema = z.object({
   agent: z.string({
     required_error: "Por favor selecciona un agente",
@@ -68,8 +48,37 @@ const formSchema = z.object({
   linkedin_profile: z.string().optional(),
 })
 
+type ApiResponse = {
+  status: string;
+  message: string;
+  data?: {
+    success: boolean;
+    message: string;
+    error_type: string;
+  }
+}
+
+type SuccessResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    githubUsername: string;
+    avatarUrl: string;
+    repositoryUrl: string;
+    linkedinProfile: string | null;
+    agentId: string;
+    status: string;
+  };
+  errorType: string | null;
+  errorCode: string | null;
+  presentationDateTime: string;
+}
+
 export function ResearcherForm() {
-  const [showQR, setShowQR] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [refreshAgentKey, setRefreshAgentKey] = useState(0)
@@ -101,15 +110,14 @@ export function ResearcherForm() {
 
       const { data } = await api.post<SuccessResponse>('/researchers-managements/researchers', formDataWithEmail)
 
-      // La respuesta es exitosa si success es true
-      if (data.success) {
-        setSuccessData(data)
-        setShowSuccessModal(true)
-        form.reset()
-        setRefreshAgentKey(prev => prev + 1)
-      } else {
+      if (!data.success) {
         throw new Error(data.message || 'Error al enviar el formulario')
       }
+
+      setSuccessData(data)
+      setShowSuccessModal(true)
+      form.reset()
+      setRefreshAgentKey(prev => prev + 1)
     } catch (error: any) {
       setErrorMessage(
         error.response?.data?.message || 
@@ -119,6 +127,19 @@ export function ResearcherForm() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const formatDateTime = (dateTimeStr: string) => {
+    const date = new Date(dateTimeStr)
+    return date.toLocaleDateString('es-CO', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    })
   }
 
   return (
@@ -311,7 +332,7 @@ export function ResearcherForm() {
       <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle className="text-center">¡Bienvenido a la Comunidad de TribuIA/Agentes!</DialogTitle>
+            <DialogTitle className="text-center">¡Bienvenido a TribuIA/Agentes! ahora eres un investigador</DialogTitle>
               <br />
           </DialogHeader>
           
@@ -329,27 +350,20 @@ export function ResearcherForm() {
                 
                 <div className="mt-4 text-center">
                   <h3 className="text-xl font-bold">{successData?.data.name}</h3>
-                  <p className="text-sm text-muted-foreground">La fecha tentativa de presentación es: {successData?.presentationDateTime}</p>
+                  <p className="text-sm text-muted-foreground">Tu fecha TENTATIVA de presentación es:</p>
                   
                   <div className="mt-4 space-y-2">
                     <div className="flex items-center justify-center gap-2 text-sm">
                       <Calendar className="h-4 w-4" />
                       <span>
                         {successData?.presentationDateTime && 
-                          new Date(successData.presentationDateTime).toLocaleDateString('es-CO', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true
-                          })}
+                          formatDateTime(successData.presentationDateTime)}
                       </span>
                     </div>
                   </div>
                   
                   <div className="mt-4 flex justify-center gap-4">
+                    <p className="text-sm text-muted-foreground">Tus redes:</p>
                     <a
                       href={successData?.data.repositoryUrl}
                       target="_blank"
@@ -384,7 +398,7 @@ export function ResearcherForm() {
               
               <div className="relative">
                 <Image
-                  src="/QR.jpeg"
+                  src="/QR.png"
                   alt="Código QR de Discord"
                   width={200}
                   height={200}
@@ -393,7 +407,7 @@ export function ResearcherForm() {
               </div>
               
               <a 
-                href="https://chat.whatsapp.com/Kxi3ftAYymLJ79YbYR6vXm"
+                href="https://discord.gg/VJzNePg4fB"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-green-600 hover:text-green-700"
@@ -411,7 +425,7 @@ export function ResearcherForm() {
                     fill="currentColor"
                   />
                 </svg>
-                Unirte al grupo de WhatsApp
+                Unirte al grupo de Discord
               </a>
             </div>
           </div>
