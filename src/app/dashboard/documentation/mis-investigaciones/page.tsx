@@ -72,8 +72,12 @@ export default function MisInvestigacionesPage() {
         githubUsername: data.githubUsername || "",
         linkedinProfile: data.linkedinProfile || "",
       });
-    } catch (error) {
-      toast.error("Error al cargar los detalles del investigador");
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        setDetails(null);
+      } else {
+        toast.error("Error al cargar los detalles del investigador");
+      }
     }
   };
 
@@ -105,7 +109,22 @@ export default function MisInvestigacionesPage() {
   };
 
   if (!details) {
-    return <div className="p-4">Cargando detalles de la investigación...</div>;
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-6 p-4">
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-bold">Aún no eres investigador</h2>
+          <p className="text-muted-foreground max-w-md">
+            Para ver tus investigaciones, primero debes registrarte como investigador y seleccionar un agente para investigar.
+          </p>
+        </div>
+        <a 
+          href="/dashboard/documentation/nuevo-agente" 
+          className="inline-flex items-center justify-center rounded-md bg-primary px-8 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+        >
+          Comenzar a Investigar
+        </a>
+      </div>
+    );
   }
 
   return (
