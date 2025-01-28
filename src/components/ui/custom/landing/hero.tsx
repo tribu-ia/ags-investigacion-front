@@ -6,7 +6,6 @@ import {
   Environment,
   OrbitControls,
   Preload,
-  Html,
   Float,
   MeshDistortMaterial,
 } from "@react-three/drei"
@@ -15,6 +14,7 @@ import { ArrowRight } from 'lucide-react'
 import { Vector3, Group, Mesh, Clock, BufferAttribute } from "three"
 import axios from "axios"
 import { useRouter } from "next/navigation"
+import CountUp from 'react-countup';
 
 interface FrameState {
   clock: Clock
@@ -285,15 +285,21 @@ function StatsSection() {
   return ( 
     <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-12 mt-8">
       <div className="flex flex-col items-center">
-        <span className="text-3xl font-bold text-white">{stats.total_agents}</span>
+        <span className="text-3xl font-bold text-white">
+          <CountUp start={0} end={stats.total_agents} duration={2.5} />
+        </span>
         <span className="text-sm text-muted-foreground">Agentes IA actuales</span>
       </div>
       <div className="flex flex-col items-center">
-        <span className="text-3xl font-bold text-white">{stats.active_investigators}</span>
+        <span className="text-3xl font-bold text-white">
+          <CountUp start={0} end={stats.active_investigators} duration={2.5} />
+        </span>
         <span className="text-sm text-muted-foreground">Investigadores Activos</span>
       </div>
       <div className="flex flex-col items-center">
-        <span className="text-3xl font-bold text-white">5</span>
+        <span className="text-3xl font-bold text-white">
+          <CountUp start={0} end={5} duration={2.5} />
+        </span>
         <span className="text-sm text-muted-foreground">Agentes Documentados</span>
       </div>
     </div>

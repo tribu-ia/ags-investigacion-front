@@ -1,22 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { AuthLoading } from "@/components/auth/auth-loading";
-import { AppSidebar } from "@/components/ui/custom/sidebar/app-sidebar";
-import {
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-    BreadcrumbPage,
-    BreadcrumbSeparator,
-  } from "@/components/ui/breadcrumb"
-  import { Separator } from "@/components/ui/separator"
-  import {
-    SidebarInset,
-    SidebarProvider,
-    SidebarTrigger,
-  } from "@/components/ui/sidebar"
+
 import { useAuth } from "@/hooks/use-auth";
 import { useApi } from "@/hooks/use-api";
 import { useEffect, useState } from "react";
