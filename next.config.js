@@ -10,10 +10,18 @@ const nextConfig = {
   trailingSlash: true,
   experimental: {
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+      },
+    ],
+  },
   webpack: (config) => {
     config.externals = [...(config.externals || []), { canvas: 'canvas' }]
     return config
   }
 }
 
-module.exports = nextConfig 
+module.exports = nextConfig
