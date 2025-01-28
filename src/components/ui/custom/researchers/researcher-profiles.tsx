@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { GithubIcon } from "@/components/ui/github"
 import { LinkedinIcon } from "@/components/ui/linkedin"
+import Loader from "@/components/ui/custom/shared/loader"
 
 interface Researcher {
   id: string
@@ -161,8 +162,16 @@ export function ResearcherProfiles() {
     fetchResearchers()
   }, [api])
 
+  if (loading) {
+    return (
+      <section className="relative h-full w-full flex justify-center items-center">
+        <Loader />
+      </section>
+    )
+  }
+
   return (
-    <div className="relative h-full w-full">
+    <section className="relative h-full w-full">
       {/* Gradient background */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
         <div className="h-[50vh] w-[50vh] animate-pulse rounded-full bg-gradient-to-r from-violet-500/20 via-purple-500/20 to-blue-500/20 blur-3xl" />
@@ -185,6 +194,6 @@ export function ResearcherProfiles() {
           )
         })}
       </div>
-    </div>
+    </section>
   )
 }
