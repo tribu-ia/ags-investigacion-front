@@ -169,7 +169,7 @@ export function ResearcherProfiles() {
       </div>
 
       {/* Grid de investigadores */}
-      <div className="relative h-full grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 auto-rows-fr">
+      <div className="relative h-full grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 auto-rows-fr">
         {researchers.map((researcher, index) => {
           const { date, time } = formatDateTime(researcher.presentationDateTime)
           return (
