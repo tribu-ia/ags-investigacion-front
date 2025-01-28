@@ -8,7 +8,7 @@ export default function EventosPage() {
       <div className="space-y-4">
         <h1 className="text-3xl font-bold">Próximas Presentaciones</h1>
         <p className="text-muted-foreground">
-          Conoce a los investigadores que presentarán sus avances este martes.
+          Conoce a los investigadores que presentarán sus avances este Martes!
         </p>
       </div>
       <div className="flex-1">

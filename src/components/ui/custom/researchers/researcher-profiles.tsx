@@ -1,10 +1,15 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
-import { Calendar, Clock, Github, Linkedin } from "lucide-react"
+import { Calendar, Clock } from "lucide-react"
 import { useApi } from "@/hooks/use-api"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
+import { GithubIcon } from "@/components/ui/github"
+import { LinkedinIcon } from "@/components/ui/linkedin"
+import Loader from "@/components/ui/custom/shared/loader"
 
 interface Researcher {
   id: string
@@ -30,73 +35,106 @@ interface ResearcherCardProps {
   index: number
 }
 
+const formatDateTime = (dateTimeStr: string) => {
+  const date = new Date(dateTimeStr)
+  const formattedDate = date.toLocaleDateString('es-CO', {
+    day: '2-digit',
+    month: 'long'
+  }).split(' ').map((word, index) => index === 2 ? word.replace(/^\w/, (c) => c.toUpperCase()) : word).join(' ')
+  const formattedTime = date.toLocaleTimeString('es-CO', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  })
+  return {
+    date: formattedDate,
+    time: formattedTime
+  }
+}
+
 function ResearcherCard({ researcher, index }: ResearcherCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="group relative h-full w-full overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500/10 to-purple-500/10 backdrop-blur-lg transition-all hover:shadow-lg hover:shadow-purple-500/20"
+      className="group relative h-full w-full overflow-hidden rounded-sm bg-gradient-to-br from-violet-500/10 to-purple-500/10 backdrop-blur-lg transition-all hover:shadow-lg hover:shadow-purple-500/20"
     >
-      {/* Capa de gradiente */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 transition-opacity group-hover:opacity-100 z-10" />
-      
-      {/* Contenido */}
-      <div className="flex h-full flex-col items-center justify-center p-3 relative z-20">
-        <div className="relative aspect-square w-[50%] overflow-hidden rounded-full border-4 border-white/80">
-          <img
-            src={researcher.avatarUrl}
-            alt={researcher.name}
-            className="h-full w-full object-cover p-2"
-          />
-        </div>
-        
-        <div className="mt-3 text-center">
-          <h3 className="text-lg font-bold text-white">{researcher.name}</h3>
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            className="mt-1.5 space-y-1 text-sm text-white/80"
-          >
-            <p className="font-medium text-xs">{researcher.role}</p>
-            <p className="text-xs opacity-80">{researcher.presentation}</p>
-            
-            <div className="mt-2 flex items-center justify-center gap-3 text-xs">
-              <div className="flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                <span>{researcher.date}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                <span>{researcher.time} COL (UTC-5)</span>
-              </div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 transition-opacity group-hover:opacity-100 -z-10" />
+
+      <div className="relative aspect-square w-[40%] overflow-hidden rounded-full border-2 border-white/80 mx-auto mt-4">
+        <Image
+          src={researcher.avatarUrl}
+          alt={researcher.name}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-cover"
+          priority
+        />
+      </div>
+
+      <div className="flex flex-col items-center justify-center gap-4 p-4">
+        {/*Datos investigador*/}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: index * 0.1 }}
+          className="flex flex-col items-center justify-center"
+        >
+          <span className="text-lg font-bold text-white">{researcher.name}</span>
+          <span className="font-medium text-xs opacity-80">{researcher.role}</span>
+        </motion.div>
+
+        {/*Fecha y hora*/}
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          className="flex flex-col items-center justify-center gap-2 text-xs text-white/80"
+        >
+          <span className="text-center font-bold">{researcher.presentation}</span>
+          <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              <span>{researcher.date}</span>
             </div>
-            
-            <div className="mt-2 flex items-center justify-center gap-3">
-              <a 
-                href={researcher.repositoryUrl}
+            <div className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              <span>{researcher.time} COL (UTC-5)</span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/*Redes sociales*/}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: index * 0.1 }}
+          className="flex items-center justify-center gap-2"
+        >
+          <Button variant="outline" className="rounded-full" size="sm">
+            <Link
+              href={researcher.repositoryUrl}
+              target="_blank"
+              className="flex items-center gap-0.5"
+            >
+              <GithubIcon />
+              <span className="text-xs font-light">GitHub</span>
+            </Link>
+          </Button>
+
+          {researcher.linkedinUrl && (
+            <Button variant="outline" className="rounded-full" size="sm">
+              <Link
+                href={researcher.linkedinUrl}
                 target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-white/60 hover:text-white transition-colors"
+                className="flex items-center gap-0.5"
               >
-                <Github className="h-3 w-3" />
-                <span>GitHub</span>
-              </a>
-              
-              {researcher.linkedinUrl && (
-                <a 
-                  href={researcher.linkedinUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-white/60 hover:text-white transition-colors"
-                >
-                  <Linkedin className="h-3 w-3" />
-                  <span>LinkedIn</span>
-                </a>
-              )}
-            </div>
-          </motion.div>
-        </div>
+                <LinkedinIcon />
+                <span className="text-xs font-light">LinkedIn</span>
+              </Link>
+            </Button>
+          )}
+        </motion.div>
       </div>
     </motion.div>
   )
@@ -124,47 +162,38 @@ export function ResearcherProfiles() {
     fetchResearchers()
   }, [api])
 
-  const formatDateTime = (dateTimeStr: string) => {
-    const date = new Date(dateTimeStr)
-    const formattedDate = date.toLocaleDateString('es-CO', {
-      day: '2-digit',
-      month: 'long'
-    })
-    const formattedTime = date.toLocaleTimeString('es-CO', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: false 
-    })
-    return {
-      date: formattedDate,
-      time: formattedTime
-    }
+  if (loading) {
+    return (
+      <section className="relative h-full w-full flex justify-center items-center">
+        <Loader />
+      </section>
+    )
   }
 
   return (
-    <div className="relative h-full w-full">
+    <section className="relative h-full w-full">
       {/* Gradient background */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
         <div className="h-[50vh] w-[50vh] animate-pulse rounded-full bg-gradient-to-r from-violet-500/20 via-purple-500/20 to-blue-500/20 blur-3xl" />
       </div>
-      
+
       {/* Grid de investigadores */}
-      <div className="relative h-full grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 auto-rows-fr">
+      <div className="relative h-full grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 auto-rows-fr">
         {researchers.map((researcher, index) => {
           const { date, time } = formatDateTime(researcher.presentationDateTime)
           return (
-            <ResearcherCard 
-              key={researcher.id} 
+            <ResearcherCard
+              key={researcher.id}
               researcher={{
                 ...researcher,
                 date,
                 time
-              }} 
-              index={index} 
+              }}
+              index={index}
             />
           )
         })}
       </div>
-    </div>
+    </section>
   )
-} 
+}
