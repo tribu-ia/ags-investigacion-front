@@ -110,7 +110,7 @@ export function LearnerForm() {
         throw new Error("El texto ingresado no es válido")
       }
 
-      const response = await fetch(`${API_BASE_URL}/query/hybrid-search`, { 
+      const response = await fetch(`${API_BASE_URL}/agents-recommendations/query/hybrid-search`, { 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

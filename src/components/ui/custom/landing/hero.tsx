@@ -6,15 +6,16 @@ import {
   Environment,
   OrbitControls,
   Preload,
-  Html,
   Float,
   MeshDistortMaterial,
 } from "@react-three/drei"
+import { EffectComposer, Bloom, BrightnessContrast} from '@react-three/postprocessing'
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from 'lucide-react'
 import { Vector3, Group, Mesh, Clock, BufferAttribute } from "three"
 import axios from "axios"
 import { useRouter } from "next/navigation"
+import CountUp from 'react-countup';
 
 interface FrameState {
   clock: Clock
@@ -79,7 +80,7 @@ function NetworkNodes({ nodes }: { nodes: NodeData[] }) {
   useFrame(({ clock }: FrameState) => {
     if (!nodesRef.current) return
     const time = clock.getElapsedTime()
-    
+
     nodes.forEach((node, i) => {
       const child = nodesRef.current?.children[i] as Mesh
       if (child) {
@@ -91,7 +92,7 @@ function NetworkNodes({ nodes }: { nodes: NodeData[] }) {
         child.position.x = Math.cos(angle) * radius
         child.position.y = Math.sin(angle) * radius + height
         child.position.z = depth
-        
+
         // Hacer que los nodos pulsen sutilmente
         const scale = Math.sin(time * 2 + node.phaseOffset) * 0.2 + 1
         child.scale.setScalar(scale)
@@ -179,7 +180,7 @@ function ConnectionLines({ nodes }: { nodes: NodeData[] }) {
 function Globe() {
   const globeRef = useRef<Mesh>(null)
   const nodes = useMemo<NodeData[]>(() => Array.from({ length: 12 }, () => ({
-    baseRadius: 2.5,
+    baseRadius: 2.4,
     speed: Math.random() * 0.5 + 0.3,
     offset: Math.random() * Math.PI * 2,
     radiusVariation: Math.random() * 0.3,
@@ -199,7 +200,7 @@ function Globe() {
       <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
         {/* Esfera principal con distorsión */}
         <mesh ref={globeRef}>
-          <sphereGeometry args={[2, 64, 64]} />
+          <sphereGeometry args={[1.8, 64, 64]} />
           <MeshDistortMaterial
             color="#1a237e"
             emissive="#0d47a1"
@@ -211,11 +212,24 @@ function Globe() {
           />
         </mesh>
 
+        <EffectComposer>
+          <Bloom
+            intensity={1.5}
+            luminanceThreshold={0.2}
+            luminanceSmoothing={0.9}
+            height={300}
+          />
+          <BrightnessContrast
+            brightness={0.1}
+            contrast={0.1}
+          />
+        </EffectComposer>
+
         <InnerParticles />
-        
+
         {/* Anillos externos */}
         <group rotation-x={Math.PI / 2}>
-          {[2.1, 2.2, 2.3].map((radius, i) => (
+          {[2.0, 2.1, 2.2].map((radius, i) => (
             <mesh key={i}>
               <ringGeometry args={[radius, radius + 0.02, 64]} />
               <meshBasicMaterial
@@ -226,7 +240,7 @@ function Globe() {
             </mesh>
           ))}
         </group>
-        
+
         <NetworkNodes nodes={nodes} />
         <ConnectionLines nodes={nodes} />
       </Float>
@@ -249,6 +263,13 @@ function Scene() {
           autoRotateSpeed={0.5}
         />
         <Environment preset="night" />
+        <EffectComposer>
+          <Bloom
+            intensity={1.5}
+            luminanceThreshold={0.1}
+            luminanceSmoothing={0.4}
+          />
+        </EffectComposer>
         <Preload all />
       </Suspense>
     </Canvas>
@@ -270,11 +291,11 @@ function StatsSection() {
 
   useEffect(() => {
     const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
-    
-    axios.get(`${baseURL}/stats`)
+
+    axios.get(`${baseURL}/researchers-managements/agents/stats`)
       .then(({ data }) => {
-        if (data.status === "success") {
-          setStats(data.data);
+        if (data) {
+          setStats(data);
         }
       })
       .catch(() => {
@@ -285,15 +306,21 @@ function StatsSection() {
   return (
     <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-12 mt-8">
       <div className="flex flex-col items-center">
-        <span className="text-3xl font-bold text-white">{stats.total_agents}</span>
+        <span className="text-3xl font-bold text-white">
+          <CountUp start={0} end={stats.total_agents} duration={2.5} />
+        </span>
         <span className="text-sm text-muted-foreground">Agentes IA actuales</span>
       </div>
       <div className="flex flex-col items-center">
-        <span className="text-3xl font-bold text-white">{stats.active_investigators}</span>
+        <span className="text-3xl font-bold text-white">
+          <CountUp start={0} end={stats.active_investigators} duration={2.5} />
+        </span>
         <span className="text-sm text-muted-foreground">Investigadores Activos</span>
       </div>
       <div className="flex flex-col items-center">
-        <span className="text-3xl font-bold text-white">{stats.documented_agents}</span>
+        <span className="text-3xl font-bold text-white">
+          <CountUp start={0} end={5} duration={2.5} />
+        </span>
         <span className="text-sm text-muted-foreground">Agentes Documentados</span>
       </div>
     </div>
@@ -302,17 +329,17 @@ function StatsSection() {
 
 export function LandingHero() {
   const router = useRouter()
-  
+
   return (
     <section className="relative min-h-[100vh] w-full overflow-hidden bg-black">
       {/* Canvas container */}
       <div className="absolute inset-0">
         <Scene />
       </div>
-      
+
       {/* Gradient overlay */}
       <div className="absolute inset-0 z-10 bg-gradient-to-b from-background/0 via-background/60 to-background" />
-      
+
       {/* Content */}
       <div className="relative z-20 flex min-h-[100vh] items-center justify-center px-4">
         <div className="container mx-auto">
@@ -320,41 +347,41 @@ export function LandingHero() {
             {/* Tag line */}
             <div className="inline-block rounded-full bg-blue-500/10 px-4 py-1.5">
               <span className="text-sm font-medium text-blue-400 uppercase tracking-wide">
-                Comunidad OpenSource
+                Comunidad Open Source
               </span>
             </div>
-            
+
             {/* Main heading */}
             <h1 className="max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">
               Agentes IA: La Nueva Era Comienza
             </h1>
-            
+
             {/* Description */}
             <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
-              Únete a la comunidad hispana más grande de investigación en agentes de IA. 
+              Únete a la comunidad hispana más grande de investigación en agentes de IA.
               Exploramos, documentamos y construimos el futuro de la inteligencia artificial juntos.
             </p>
-            
+
             {/* CTA buttons */}
             <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
                 onClick={() => router.push("/dashboard/documentation/nuevo-agente")}
               >
                 Sé un Investigador
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
+              <Button
+                variant="outline"
+                size="lg"
                 className="w-full sm:w-auto"
                 onClick={() => document.querySelector('#join-research')?.scrollIntoView({ behavior: 'smooth' })}
               >
                 Encuentra tu Agente
               </Button>
             </div>
-            
+
             <StatsSection />
           </div>
         </div>

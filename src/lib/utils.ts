@@ -21,3 +21,47 @@ export const formatDate = (
   const date = new Date(dateString);
   return date.toLocaleString(locale, options);
 }
+
+export type FilterableResource = {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  topic: string;
+  tags: string[];
+}
+
+export type FilterConfig<T> = {
+  searchFields: (keyof T)[];
+  filters: {
+    field: keyof T;
+    value: string;
+    defaultValue?: string;
+  }[];
+}
+
+export function createFilter<T extends FilterableResource>(config: FilterConfig<T>) {
+  return function filter(
+    items: T[],
+    searchTerm: string,
+    selectedFilters: Record<string, string>
+  ): T[] {
+    return items.filter((item) => {
+      // Handle search across configured fields
+      const matchesSearch = searchTerm === '' || config.searchFields.some(field => {
+        const value = item[field];
+        return Array.isArray(value)
+          ? value.some(v => v.toLowerCase().includes(searchTerm.toLowerCase()))
+          : String(value).toLowerCase().includes(searchTerm.toLowerCase());
+      });
+
+      // Handle filters
+      const matchesFilters = config.filters.every(({ field, defaultValue }) => {
+        const filterValue = selectedFilters[field as string];
+        return filterValue === defaultValue || item[field] === filterValue;
+      });
+
+      return matchesSearch && matchesFilters;
+    });
+  };
+}
