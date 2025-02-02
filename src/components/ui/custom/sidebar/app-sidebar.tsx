@@ -52,11 +52,15 @@ const data = {
         },
         {
           title: "Mis investigaciones",
-          url: "/dashboard/documentation/mis-investigaciones",  
+          url: "/dashboard/documentation/mis-investigaciones",
         },
         {
           title: "Proximos eventos",
           url: "/dashboard/documentation/eventos",
+        },
+        {
+          title: "Proyectos",
+          url: "/dashboard/documentation/proyectos",
         }
       ],
     }
