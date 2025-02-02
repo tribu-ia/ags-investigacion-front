@@ -6,6 +6,7 @@ import { useApi } from "@/hooks/use-api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import Loader from "@/components/ui/custom/shared/loader";
 import {
   Dialog,
   DialogContent,
@@ -51,6 +52,7 @@ export default function MisInvestigacionesPage() {
   const [details, setDetails] = useState<ResearcherDetails | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [updateForm, setUpdateForm] = useState<ResearcherUpdate>({
     currentRole: "",
     githubUsername: "",
@@ -64,6 +66,7 @@ export default function MisInvestigacionesPage() {
   }, [profile?.email]);
 
   const loadResearcherDetails = async () => {
+    setIsLoading(true);
     try {
       const { data } = await api.get<ResearcherDetails>(`/researchers-managements/researchers/details?email=${profile?.email}`);
       setDetails(data);
@@ -78,6 +81,8 @@ export default function MisInvestigacionesPage() {
       } else {
         toast.error("Error al cargar los detalles del investigador");
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -107,6 +112,18 @@ export default function MisInvestigacionesPage() {
         return "bg-gray-500/10 text-gray-500";
     }
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center min-h-[50vh] p-4">
+        <div className="space-y-4 text-center">
+          <Loader />
+          <p className="text-muted-foreground">Cargando información...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!details) {
     return (
