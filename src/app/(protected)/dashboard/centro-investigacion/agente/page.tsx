@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useApi } from "@/hooks/use-api";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlayCircle } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import '@/styles/github-markdown.css';
+import { Progress } from "@/components/ui/progress";
+import { AlertCircle, CheckCircle, Search, Pen } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 // Importaciones de plugins de markdown
 const remarkGfm = require('remark-gfm');
@@ -53,6 +56,47 @@ def hello_world():
 > **Nota:** Este es un ejemplo de cómo se verá el formato en GitHub.
 `;
 
+// Definir tipos para los mensajes
+type ProgressMessage = {
+  type: "progress";
+  message: string;
+  data: any;
+};
+
+type WritingProgressMessage = {
+  type: "writing_progress";
+  message: "section_start" | "content_chunk" | "section_complete" | "report_complete";
+  data: {
+    section_name?: string;
+    content?: string;
+    completed_sections?: string[];
+  };
+};
+
+type CompleteMessage = {
+  type: "complete";
+  data: {
+    message: string;
+    section: {
+      id: string;
+      name: string;
+      description: string;
+      content: string;
+      research: boolean;
+      status: string;
+    };
+  };
+};
+
+type ErrorMessage = {
+  type: "error";
+  data: {
+    error: string;
+  };
+};
+
+type WebSocketMessage = ProgressMessage | WritingProgressMessage | CompleteMessage | ErrorMessage;
+
 export default function AgenteInvestigadorPage() {
   const { profile } = useAuth();
   const api = useApi();
@@ -60,11 +104,29 @@ export default function AgenteInvestigadorPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [markdown, setMarkdown] = useState(markdownExample);
   const [isStartingResearch, setIsStartingResearch] = useState(false);
+  const [messages, setMessages] = useState<Array<WebSocketMessage>>([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const wsRef = useRef<WebSocket | null>(null);
+  const [currentPhase, setCurrentPhase] = useState<string>("");
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const phases = {
+    research: ["Iniciando investigación", "Recuperando datos previos", "Generando consultas", "Realizando búsqueda", "Procesando resultados"],
+    writing: ["Preparando contenido", "Generando secciones", "Finalizando documento"]
+  };
 
   useEffect(() => {
     if (profile?.email) {
       loadResearcherDetails();
+      connectWebSocket();
     }
+
+    // Limpiar conexión cuando el componente se desmonta
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
   }, [profile?.email]);
 
   const loadResearcherDetails = async () => {
@@ -83,18 +145,102 @@ export default function AgenteInvestigadorPage() {
     }
   };
 
+  const connectWebSocket = () => {
+    const ws = new WebSocket('ws://localhost:8098/ws');
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      setIsConnected(true);
+      console.log('WebSocket conectado');
+    };
+
+    ws.onmessage = (event) => {
+      const message: WebSocketMessage = JSON.parse(event.data);
+      setMessages(prev => [...prev, message]);
+
+      switch (message.type) {
+        case 'progress':
+          handleProgressMessage(message);
+          break;
+        case 'writing_progress':
+          handleWritingProgress(message);
+          break;
+        case 'complete':
+          handleComplete(message);
+          break;
+        case 'error':
+          handleError(message);
+          break;
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      toast.error('Error en la conexión WebSocket');
+    };
+
+    ws.onclose = () => {
+      setIsConnected(false);
+      console.log('WebSocket desconectado');
+    };
+  };
+
+  const handleProgressMessage = (message: ProgressMessage) => {
+    setCurrentPhase(message.message);
+    // Actualizar progreso basado en el mensaje
+    const phaseIndex = phases.research.indexOf(message.message);
+    if (phaseIndex !== -1) {
+      setProgress((phaseIndex + 1) * (100 / phases.research.length));
+    }
+    toast.info(message.message);
+  };
+
+  const handleWritingProgress = (message: WritingProgressMessage) => {
+    switch (message.message) {
+      case 'section_start':
+        setCurrentPhase(`Escribiendo sección: ${message.data.section_name}`);
+        break;
+      case 'content_chunk':
+        if (message.data.content) {
+          setMarkdown(prev => prev + message.data.content);
+        }
+        break;
+      case 'section_complete':
+        toast.success(`Sección completada: ${message.data.section_name}`);
+        break;
+      case 'report_complete':
+        setProgress(100);
+        toast.success("Documento completado");
+        break;
+    }
+  };
+
+  const handleComplete = (message: CompleteMessage) => {
+    setProgress(100);
+    setCurrentPhase("Completado");
+    setMarkdown(message.data.section.content);
+    toast.success(message.data.message);
+  };
+
+  const handleError = (message: ErrorMessage) => {
+    setError(message.data.error);
+    toast.error(message.data.error);
+  };
+
   const handleStartResearch = async () => {
-    if (!details) return;
+    if (!details || !wsRef.current) return;
     
     setIsStartingResearch(true);
     try {
-      await api.post(`/researchers-managements/researchers/start-research`, {
-        email: profile?.email,
-        agentDescription: details.agentDescription,
-        agentCategory: details.agentCategory,
-        agentIndustry: details.agentIndustry,
-        markdown: markdown
-      });
+      // Enviar mensaje inicial al WebSocket
+      const message = {
+        type: "start_research",
+        section_id: "test-section-1",
+        title: details.agentName,
+        description: details.agentDescription
+      };
+      
+      wsRef.current.send(JSON.stringify(message));
       toast.success("Investigación iniciada correctamente");
     } catch (error) {
       toast.error("Error al iniciar la investigación");
@@ -102,6 +248,28 @@ export default function AgenteInvestigadorPage() {
       setIsStartingResearch(false);
     }
   };
+
+  // Agregar componente de progreso
+  const ProgressIndicator = () => (
+    <div className="space-y-4 mb-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {progress < 100 ? (
+            currentPhase.includes("Escribiendo") ? (
+              <Pen className="w-4 h-4 animate-pulse" />
+            ) : (
+              <Search className="w-4 h-4 animate-spin" />
+            )
+          ) : (
+            <CheckCircle className="w-4 h-4 text-green-500" />
+          )}
+          <span className="text-sm font-medium">{currentPhase}</span>
+        </div>
+        <span className="text-sm text-muted-foreground">{Math.round(progress)}%</span>
+      </div>
+      <Progress value={progress} className="h-2" />
+    </div>
+  );
 
   if (isLoading) {
     return (
@@ -210,6 +378,26 @@ export default function AgenteInvestigadorPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Indicador de conexión y progreso */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+          <span className="text-sm text-muted-foreground">
+            {isConnected ? 'Conectado' : 'Desconectado'}
+          </span>
+        </div>
+        
+        {currentPhase && <ProgressIndicator />}
+        
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+      </div>
     </div>
   );
 }
