@@ -15,11 +15,9 @@ import '@/styles/github-markdown.css';
 import { Progress } from "@/components/ui/progress";
 import { AlertCircle, CheckCircle, Search, Pen } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-
-// Importaciones de plugins de markdown
-const remarkGfm = require('remark-gfm');
-const rehypeRaw = require('rehype-raw');
-const rehypeSanitize = require('rehype-sanitize');
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import rehypeSanitize from 'rehype-sanitize';
 
 type ResearcherDetails = {
   name: string;
@@ -95,7 +93,24 @@ type ErrorMessage = {
   };
 };
 
-type WebSocketMessage = ProgressMessage | WritingProgressMessage | CompleteMessage | ErrorMessage;
+// Agregar el nuevo tipo de mensaje
+type CompilerProgressMessage = {
+  type: "compiler_progress";
+  message: "final_report_chunk";
+  data: {
+    type: "report_content";
+    content: string;
+    is_complete: boolean;
+  };
+};
+
+// Actualizar el tipo WebSocketMessage
+type WebSocketMessage = 
+  | ProgressMessage 
+  | WritingProgressMessage 
+  | CompleteMessage 
+  | ErrorMessage 
+  | CompilerProgressMessage;
 
 export default function AgenteInvestigadorPage() {
   const { profile } = useAuth();
@@ -110,10 +125,12 @@ export default function AgenteInvestigadorPage() {
   const [currentPhase, setCurrentPhase] = useState<string>("");
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [streamingContent, setStreamingContent] = useState("");
   const phases = {
     research: ["Iniciando investigación", "Recuperando datos previos", "Generando consultas", "Realizando búsqueda", "Procesando resultados"],
     writing: ["Preparando contenido", "Generando secciones", "Finalizando documento"]
   };
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (profile?.email) {
@@ -171,6 +188,9 @@ export default function AgenteInvestigadorPage() {
         case 'error':
           handleError(message);
           break;
+        case 'compiler_progress':
+          handleCompilerProgress(message);
+          break;
       }
     };
 
@@ -227,6 +247,27 @@ export default function AgenteInvestigadorPage() {
     toast.error(message.data.error);
   };
 
+  const handleCompilerProgress = (message: CompilerProgressMessage) => {
+    if (message.message === "final_report_chunk") {
+      const { content, is_complete } = message.data;
+      
+      setStreamingContent(prev => {
+        const newContent = prev + content;
+        setTimeout(scrollToBottom, 0);
+        return newContent;
+      });
+      
+      if (is_complete) {
+        setMarkdown(streamingContent);
+        setProgress(100);
+        setCurrentPhase("Reporte completado");
+        toast.success("Reporte generado completamente");
+      } else {
+        setCurrentPhase("Generando reporte...");
+      }
+    }
+  };
+
   const handleStartResearch = async () => {
     if (!details || !wsRef.current) return;
     
@@ -246,6 +287,13 @@ export default function AgenteInvestigadorPage() {
       toast.error("Error al iniciar la investigación");
     } finally {
       setIsStartingResearch(false);
+    }
+  };
+
+  // Función para mantener el scroll en la parte inferior
+  const scrollToBottom = () => {
+    if (textareaRef.current) {
+      textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
     }
   };
 
@@ -331,10 +379,12 @@ export default function AgenteInvestigadorPage() {
         <TabsContent value="editor" className="space-y-4">
           <div className="rounded-lg border bg-card">
             <Textarea
+              ref={textareaRef}
               placeholder="Escribe tu investigación en markdown..."
               className="min-h-[600px] font-mono bg-card border-none focus-visible:ring-0"
-              value={markdown}
+              value={streamingContent || markdown}
               onChange={(e) => setMarkdown(e.target.value)}
+              readOnly={!!streamingContent}
             />
           </div>
           <div className="flex justify-end">
@@ -351,8 +401,11 @@ export default function AgenteInvestigadorPage() {
         <TabsContent value="preview">
           <div className="rounded-lg border bg-card">
             <div className="markdown-preview p-6 min-h-[600px]">
-              <ReactMarkdown>
-                {markdown}
+              <ReactMarkdown 
+                children={streamingContent || markdown}
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw, rehypeSanitize]}
+              >
               </ReactMarkdown>
             </div>
           </div>
