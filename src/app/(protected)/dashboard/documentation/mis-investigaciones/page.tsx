@@ -24,6 +24,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Calendar, Trophy, Lightbulb, Target } from "lucide-react";
+import { useChallengeStatus } from '@/contexts/challenge-status-context';
 
 type ResearcherDetails = {
   name: string;
@@ -38,6 +39,8 @@ type ResearcherDetails = {
   agentName: string;
   status: string;
   presentationWeek: string;
+  showOrder: number;
+  assignmentId?: string;
 };
 
 type ResearcherUpdate = {
@@ -47,6 +50,7 @@ type ResearcherUpdate = {
 };
 
 export default function MisInvestigacionesPage() {
+  const { challengeStatus } = useChallengeStatus();
   const { profile } = useAuth();
   const api = useApi();
   const [details, setDetails] = useState<ResearcherDetails | null>(null);
@@ -57,6 +61,12 @@ export default function MisInvestigacionesPage() {
     currentRole: "",
     githubUsername: "",
     linkedinProfile: "",
+  });
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [projectForm, setProjectForm] = useState({
+    name: '',
+    description: '',
+    videoUrl: '',
   });
 
   useEffect(() => {
@@ -110,6 +120,37 @@ export default function MisInvestigacionesPage() {
         return "bg-red-500/10 text-red-500";
       default:
         return "bg-gray-500/10 text-gray-500";
+    }
+  };
+
+  const shouldShowUploadButton = details?.showOrder === challengeStatus?.currentMonth;
+
+  const handleCreateProject = async () => {
+    setIsSaving(true);
+    try {
+      if (!details?.assignmentId) {
+        throw new Error('No assignment ID found');
+      }
+
+      const payload = {
+        assignmentId: details.assignmentId,
+        title: projectForm.name,
+        description: projectForm.description,
+        youtubeUrl: projectForm.videoUrl
+      };
+
+      const response = await api.post('/researchers-managements/agent-videos/upload', payload);
+      
+      if (response.status === 200 || response.status === 201) {
+        toast.success("¡Proyecto cargado exitosamente! Tu video ha sido registrado y será revisado por el equipo.");
+        setIsCreatingProject(false);
+        setProjectForm({ name: '', description: '', videoUrl: '' });
+      }
+    } catch (error) {
+      console.error('Error uploading project:', error);
+      toast.error("Error al cargar el proyecto. Por favor intente nuevamente.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -631,6 +672,63 @@ export default function MisInvestigacionesPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={isCreatingProject} onOpenChange={setIsCreatingProject}>
+        {shouldShowUploadButton && (
+          <DialogTrigger asChild>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              disabled={!challengeStatus?.isWeekOfUpload}
+              title={!challengeStatus?.isWeekOfUpload ? 
+                "La carga de proyectos solo está disponible durante la semana de carga" : 
+                "Cargar nuevo proyecto"}
+            >
+              {challengeStatus?.isWeekOfUpload ? 
+                "Cargar Proyecto" : 
+                "Carga de proyectos no disponible"}
+            </Button>
+          </DialogTrigger>
+        )}
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cargar Proyecto</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nombre del Proyecto</Label>
+              <Input
+                id="name"
+                value={projectForm.name}
+                onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Descripción del Proyecto</Label>
+              <Input
+                id="description"
+                value={projectForm.description}
+                onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="videoUrl">URL del Video</Label>
+              <Input
+                id="videoUrl"
+                value={projectForm.videoUrl}
+                onChange={(e) => setProjectForm({ ...projectForm, videoUrl: e.target.value })}
+              />
+            </div>
+            <Button 
+              onClick={handleCreateProject} 
+              className="w-full"
+              disabled={isSaving}
+            >
+              {isSaving ? "Cargando..." : "Cargar Proyecto"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
