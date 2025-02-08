@@ -41,6 +41,7 @@ type ResearcherDetails = {
   status: string;
   presentationWeek: string;
   assignmentId: string;
+  showOrder: string;
 };
 
 type ResearcherUpdate = {
@@ -147,6 +148,8 @@ export default function MisInvestigacionesPage() {
         return "bg-gray-500/10 text-gray-500";
     }
   };
+
+  const shouldShowUploadButton = details?.showOrder === challengeStatus?.currentMonth;
 
   if (!details) {
     return (
@@ -300,20 +303,22 @@ export default function MisInvestigacionesPage() {
                 </p>
               </div>
               <Dialog open={isCreatingProject} onOpenChange={setIsCreatingProject}>
-                <DialogTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    disabled={!challengeStatus?.isWeekOfUpload}
-                    title={!challengeStatus?.isWeekOfUpload ? 
-                      "La carga de proyectos solo está disponible durante la semana de carga" : 
-                      "Cargar nuevo proyecto"}
-                  >
-                    {challengeStatus?.isWeekOfUpload ? 
-                      "Cargar Proyecto" : 
-                      "Carga de proyectos no disponible"}
-                  </Button>
-                </DialogTrigger>
+                {shouldShowUploadButton && (
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      disabled={!challengeStatus?.isWeekOfUpload}
+                      title={!challengeStatus?.isWeekOfUpload ? 
+                        "La carga de proyectos solo está disponible durante la semana de carga" : 
+                        "Cargar nuevo proyecto"}
+                    >
+                      {challengeStatus?.isWeekOfUpload ? 
+                        "Cargar Proyecto" : 
+                        "Carga de proyectos no disponible"}
+                    </Button>
+                  </DialogTrigger>
+                )}
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Cargar Nuevo Proyecto</DialogTitle>
