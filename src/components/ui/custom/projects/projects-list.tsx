@@ -1,36 +1,60 @@
 'use client'
 
-import { useState } from 'react'
-import { Project } from '@/types/project'
+import { useApi } from "@/hooks/use-api";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion"
 import LikeButton from '../shared/like-button'
 
-const mockProjects: Project[] = [
-  {
-    id: '1',
-    name: 'Bienvenidos a la revolución de los agentes autónomos de IA en 2025',
-    description: 'Este martes 21 de enero, a las 6:00 p.m. (GMT-5), daré inicio a Tribu IA / Agentes, un programa diseñado para explorar lo mejor de los Agentes de IA',
-    videoUrl: 'https://www.youtube.com/embed/dSjxbQ_Fl-0?si=GkmL1FsaBkqmIpOS',
-    votes: 0
-  },
-  {
-    id: '2',
-    name: 'Tribu IA / Agentes - W2 - 1️⃣ Eidolon AI 2️⃣ PaperToPodcast 3️⃣ AutoGPT 4️⃣ Wordware 5️⃣F/MS Startup',
-    description: 'Cada semana, cinco investigadores presentan un agente de nuestra base de más de 500 opciones. Este es el espacio perfecto si quieres organizar tus ideas y descubrir cómo aprovechar los agentes de IA en tu negocio o proyecto.',
-    videoUrl: 'https://www.youtube.com/embed/6Vo1zuDJb8g?si=i3g25U-04aUKNxXn',
-    votes: 0
-  }
-]
+interface VotingPeriod {
+  startDate: string | null;
+  endDate: string | null;
+  votingOpen: boolean;
+}
+
+interface Project {
+  id: string;
+  assignmentId: string;
+  title: string;
+  description: string;
+  youtubeUrl: string;
+  uploadedAt: string;
+  status: string;
+  votingPeriod: VotingPeriod;
+  votesCount: number;
+}
 
 export function ProjectList() {
-  const [projects, setProjects] = useState<Project[]>(mockProjects)
+  const api = useApi();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleVote = (projectId: string) => {
-    setProjects(projects.map(project =>
-      project.id === projectId
-        ? { ...project, votes: project.votes + 1 }
-        : project
-    ))
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const { data } = await api.get('/researchers-managements/agent-videos/voting-period');
+        setProjects(data);
+      } catch (error: any) {
+        console.error('Error fetching projects:', error);
+        setErrorMessage(
+          error.response?.data?.message || 
+          error.message || 
+          'Error al cargar los proyectos'
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, [api]);
+
+  if (isLoading) {
+    return <div>Cargando proyectos...</div>;
+  }
+
+  if (errorMessage) {
+    return <div className="text-red-500">Error: {errorMessage}</div>;
   }
 
   return (
@@ -45,9 +69,9 @@ export function ProjectList() {
         >
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 transition-opacity group-hover:opacity-100 -z-10" />
 
-          {project.videoUrl && (
+          {project.youtubeUrl && (
             <iframe
-              src={project.videoUrl}
+              src={project.youtubeUrl}
               className="w-full"
               allowFullScreen
             />
@@ -61,7 +85,7 @@ export function ProjectList() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className="flex flex-col items-center justify-center gap-1"
             >
-              <span className="text-lg font-bold text-white leading-none">{project.name}</span>
+              <span className="text-lg font-bold text-white leading-none">{project.title}</span>
               <span className="font-medium text-xs opacity-80">{project.description}</span>
             </motion.div>
 
@@ -73,8 +97,8 @@ export function ProjectList() {
               className="flex items-center justify-center gap-2"
             >
               <LikeButton
-                initialCount={project.votes}
-                initialLiked={project.votes > 0}
+                initialCount={project.votesCount}
+                initialLiked={project.votesCount > 0}
               />
             </motion.div>
           </div>
