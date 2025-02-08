@@ -5,10 +5,8 @@ import {
   BookOpen,
   Bot,
   Command,
-  LifeBuoy,
-  Send,
+  type LucideIcon,
 } from "lucide-react"
-
 import { NavMain } from "@/components/ui/custom/sidebar/nav-main"
 import { NavSecondary } from "@/components/ui/custom/sidebar/nav-secondary"
 import { NavUser } from "@/components/ui/custom/sidebar/nav-user"
@@ -22,41 +20,57 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-const data = {
+export interface SidebarItem {
+  title: string;
+  url: string;
+  icon: LucideIcon;
+  isActive?: boolean;
+  items?: {
+    title: string;
+    url: string;
+  }[]
+}
+
+type SidebarNav = {
+  navMain: SidebarItem[];
+  navSecondary: SidebarItem[];
+}
+
+const data: SidebarNav = {
   navMain: [
     {
-      title: "Centro de investigacion",
+      title: "Centro de investigación",
       url: "##",
       icon: Bot,
       isActive: true,
       items: [
         {
           title: "Agente investigador",
-          url: "/dashboard/centro-investigacion/agente",
+          url: "/dashboard/centro-investigacion/agente/",
         },
         {
-        title: "Guias y recursos",
-         url: "/dashboard/centro-investigacion/guias",
-         }
+          title: "Guias y recursos",
+          url: "/dashboard/centro-investigacion/guias/",
+        }
       ],
     },
     {
-      title: "Documentation",
+      title: "Documentación",
       url: "#",
       icon: BookOpen,
       isActive: true,
       items: [
         {
           title: "Investigar nuevo agente",
-          url: "/dashboard/documentation/nuevo-agente",
+          url: "/dashboard/documentation/nuevo-agente/",
         },
         {
           title: "Mis investigaciones",
-          url: "/dashboard/documentation/mis-investigaciones",  
+          url: "/dashboard/documentation/mis-investigaciones/",
         },
         {
-          title: "Proximos eventos",
-          url: "/dashboard/documentation/eventos",
+          title: "Próximos eventos",
+          url: "/dashboard/documentation/eventos/",
         }
       ],
     }
