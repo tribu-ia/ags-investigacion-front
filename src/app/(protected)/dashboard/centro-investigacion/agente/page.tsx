@@ -20,6 +20,7 @@ import rehypeSanitize from 'rehype-sanitize';
 import Image from "next/image";
 import {motion, AnimatePresence} from 'framer-motion';
 import { fadeSlideVariants, iconVariants } from "@/styles/animations";
+import { useSidebar } from "@/components/ui/sidebar";
 
 type ResearcherDetails = {
   name: string;
@@ -160,6 +161,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = (
 export default function AgenteInvestigadorPage() {
   const { profile } = useAuth();
   const api = useApi();
+  const { open: isSidebarOpen } = useSidebar();
   const [details, setDetails] = useState<ResearcherDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [markdown, setMarkdown] = useState(markdownExample);
@@ -375,69 +377,111 @@ export default function AgenteInvestigadorPage() {
   return (
     <div className="space-y-6">
       <Card className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-none">
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center md:gap-5 lg:gap-10">
-            {/* User info */}
-            <div className="flex items-center gap-2 min-w-fit">
-              <div className="relative aspect-square w-16 h-16 overflow-hidden rounded-full ring-2 ring-primary/20">
-                <Image
-                  src={details.avatarUrl}
-                  alt={details.name}
-                  fill
-                  priority
-                />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold">¡Hola, {details.name}!</h2>
-                <p className="text-muted-foreground">
-                  Investigando: {details.agentName}
-                </p>
-              </div>
+        <CardContent
+          className={`
+            p-4
+            flex
+            flex-col
+            justify-between
+            items-start
+            gap-4
+            md:p-6
+            ${isSidebarOpen ? 'lg:flex-col' : 'lg:flex-row'}
+            ${isSidebarOpen ? 'lg:items-start' : 'lg:items-center'}
+            ${isSidebarOpen ? 'lg:gap-4' : 'lg:gap-8'}
+            xl:flex-row
+            xl:items-center
+            xl:gap-8
+          `}
+        >
+          {/* User info */}
+          <div className="flex items-center gap-2 min-w-fit">
+            <div className="relative aspect-square w-16 h-16 overflow-hidden rounded-full ring-2 ring-primary/20">
+              <Image
+                src={details.avatarUrl}
+                alt={details.name}
+                fill
+                priority
+              />
+            </div>
+            <div>
+              <h2 className="text-md md:text-2xl font-bold">¡Hola, {details.name}!</h2>
+              <p className="text-sm md:text-lg text-muted-foreground">
+                Investigando: {details.agentName}
+              </p>
+            </div>
+          </div>
+
+          {/* Status & Button */}
+          <div
+            className={`
+              w-full
+              flex
+              flex-col
+              items-start
+              sm:w-auto
+              ${isSidebarOpen
+                ? 'lg:items-start lg:self-start'
+                : 'lg:items-end lg:self-end'
+              }
+              xl:items-end
+              xl:self-end
+              transition-all
+              duration-300
+            `}
+          >
+            <div
+              className={`
+                flex
+                items-center
+                gap-2
+                flex-row-reverse
+                ${isSidebarOpen
+                  ? 'lg:flex-row-reverse'
+                  : 'lg:flex-row'
+                }
+                xl:flex-row
+              `}
+            >
+              <span className="text-sm">{isConnected ? 'Conectado' : 'Desconectado'}</span>
+              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
             </div>
 
-            {/* Status & Button */}
-            <div className="flex flex-col items-end w-full sm:w-auto self-end">
-              <div className="flex items-center gap-2">
-                <span className="text-sm">{isConnected ? 'Conectado' : 'Desconectado'}</span>
-                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-              </div>
-
-              <AnimatePresence mode="wait">
-                {!currentPhase ? (
-                  <motion.div
-                    key="button"
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    variants={fadeSlideVariants}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
+            <AnimatePresence mode="wait">
+              {!currentPhase ? (
+                <motion.div
+                  key="button"
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  variants={fadeSlideVariants}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                >
+                  <Button
+                    onClick={handleStartResearch}
+                    disabled={!isConnected || isStartingResearch}
+                    className="mt-1 w-full sm:w-auto transition-opacity duration-200 disabled:opacity-30 hover:opacity-90"
                   >
-                    <Button
-                      onClick={handleStartResearch}
-                      disabled={!isConnected || isStartingResearch}
-                      className="w-full sm:w-auto transition-opacity duration-200 disabled:opacity-30 hover:opacity-90"
-                    >
-                      <PlayCircle className={`w-4 h-4 ${isStartingResearch && 'animate-pulse'}`} />
-                      {isStartingResearch ? 'Iniciando...' : 'Iniciar investigación'}
-                    </Button>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="progress"
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    variants={fadeSlideVariants}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                  >
-                    <ProgressIndicator
-                      progress={progress}
-                      currentPhase={currentPhase}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                    <PlayCircle className={`w-4 h-4 ${isStartingResearch && 'animate-pulse'}`} />
+                    {isStartingResearch ? 'Iniciando...' : 'Iniciar investigación'}
+                  </Button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="progress"
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  variants={fadeSlideVariants}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                >
+                  <ProgressIndicator
+                    progress={progress}
+                    currentPhase={currentPhase}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </CardContent>
       </Card>
@@ -480,7 +524,7 @@ export default function AgenteInvestigadorPage() {
 
       {/* Detalles del Agente */}
       <Card>
-        <CardContent className="p-6 flex flex-col md:flex-row md:justify-between gap-16">
+        <CardContent className="p-4 md:p-6 flex flex-col md:flex-row md:justify-between gap-4 md:gap-10 lg:gap-16">
           <div className="basis-auto">
             <h3 className="font-semibold mb-2">Descripción</h3>
             <p className="text-sm text-muted-foreground">{details.agentDescription}</p>
@@ -496,16 +540,14 @@ export default function AgenteInvestigadorPage() {
         </CardContent>
       </Card>
 
-      {/* Indicador de conexión y progreso */}
-      <div className="space-y-4">
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-      </div>
+      {/* Indicador de errores */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 }
