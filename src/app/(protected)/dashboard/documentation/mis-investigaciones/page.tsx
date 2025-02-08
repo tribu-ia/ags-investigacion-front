@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/accordion";
 import { Calendar, Trophy, Lightbulb, Target } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { useChallengeStatus } from '@/contexts/challenge-status-context';
 
 type ResearcherDetails = {
   name: string;
@@ -39,6 +40,7 @@ type ResearcherDetails = {
   agentName: string;
   status: string;
   presentationWeek: string;
+  assignmentId: string;
 };
 
 type ResearcherUpdate = {
@@ -64,6 +66,7 @@ export default function MisInvestigacionesPage() {
     description: '',
     videoUrl: ''
   });
+  const { challengeStatus } = useChallengeStatus();
 
   useEffect(() => {
     if (profile?.email) {
@@ -104,7 +107,32 @@ export default function MisInvestigacionesPage() {
   };
 
   const handleCreateProject = async () => {
-    // Add project creation logic here
+    setIsSaving(true);
+    try {
+      if (!details?.assignmentId) {
+        throw new Error('No assignment ID found');
+      }
+
+      const payload = {
+        assignmentId: details.assignmentId,
+        title: projectForm.name,
+        description: projectForm.description,
+        youtubeUrl: projectForm.videoUrl
+      };
+
+      const response = await api.post('/researchers-managements/agent-videos/upload', payload);
+      
+      if (response.status === 200 || response.status === 201) {
+        toast.success("¡Proyecto cargado exitosamente! Tu video ha sido registrado y será revisado por el equipo.");
+        setIsCreatingProject(false);
+        setProjectForm({ name: '', description: '', videoUrl: '' });
+      }
+    } catch (error) {
+      console.error('Error uploading project:', error);
+      toast.error("Error al cargar el proyecto. Por favor intente nuevamente.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -273,7 +301,18 @@ export default function MisInvestigacionesPage() {
               </div>
               <Dialog open={isCreatingProject} onOpenChange={setIsCreatingProject}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" className="w-full">Cargar Proyecto</Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    disabled={!challengeStatus?.isWeekOfUpload}
+                    title={!challengeStatus?.isWeekOfUpload ? 
+                      "La carga de proyectos solo está disponible durante la semana de carga" : 
+                      "Cargar nuevo proyecto"}
+                  >
+                    {challengeStatus?.isWeekOfUpload ? 
+                      "Cargar Proyecto" : 
+                      "Carga de proyectos no disponible"}
+                  </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
