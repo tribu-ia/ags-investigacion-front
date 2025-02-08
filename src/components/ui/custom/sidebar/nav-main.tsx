@@ -1,7 +1,6 @@
 "use client"
 
-import { ChevronRight, type LucideIcon } from "lucide-react"
-
+import { ChevronRight } from "lucide-react"
 import {
   Collapsible,
   CollapsibleContent,
@@ -19,32 +18,41 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 import Link from "next/link"
+import { SidebarItem } from "./app-sidebar"
+import { usePathname } from "next/navigation"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
-export function NavMain({
-  items,
-}: {
-  items: {
-    title: string
-    url: string
-    icon: LucideIcon
-    isActive?: boolean
-    items?: {
-      title: string
-      url: string
-    }[]
-  }[]
-}) {
+export function NavMain({ items }: { items: SidebarItem[] }) {
+  const pathname = usePathname()
+
+  const isActive = (url: string) => pathname === url
+  const isGroupActive = (items: { url: string }[]) =>
+    items?.some(item => isActive(item.url))
+
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <VisuallyHidden asChild>
+        <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      </VisuallyHidden>
       <SidebarMenu>
         {items.map((item) => (
-          <Collapsible key={item.title} asChild defaultOpen={item.isActive}>
+          <Collapsible
+            key={item.title}
+            asChild
+            defaultOpen={item.isActive || isGroupActive(item.items || [])}
+          >
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip={item.title}>
+              <SidebarMenuButton
+                asChild
+                tooltip={item.title}
+                isActive={isActive(item.url)}
+                className={isGroupActive(item.items || []) ?
+                  "text-primary font-medium" : ""}
+              >
                 <Link href={item.url}>
                   <item.icon />
                   <span>{item.title}</span>
+                  <p>{isGroupActive(item.items || [])}</p>
                 </Link>
               </SidebarMenuButton>
               {item.items?.length ? (
@@ -59,7 +67,12 @@ export function NavMain({
                     <SidebarMenuSub>
                       {item.items?.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton asChild>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={isActive(subItem.url)}
+                            className={isActive(subItem.url) ?
+                              "bg-primary/10 text-primary font-medium before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-primary" : ""}
+                          >
                             <Link href={subItem.url}>
                               <span>{subItem.title}</span>
                             </Link>
