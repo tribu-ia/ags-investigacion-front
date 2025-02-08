@@ -317,6 +317,29 @@ export default function MisInvestigacionesPage() {
                   Recuerda que debes demostrar el funcionamiento de tu investigación.
                 </p>
               </div>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-4">
+                  {/* ... existing content ... */}
+                </div>
+                <div className="space-y-2">
+                  {/* ... existing content ... */}
+                  {shouldShowUploadButton && (
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      disabled={!challengeStatus?.isWeekOfUpload}
+                      onClick={() => setIsCreatingProject(true)}
+                      title={!challengeStatus?.isWeekOfUpload ? 
+                        "La carga de proyectos solo está disponible durante la semana de carga" : 
+                        "Cargar nuevo proyecto"}
+                    >
+                      {challengeStatus?.isWeekOfUpload ? 
+                        "Cargar Proyecto" : 
+                        "Carga de proyectos no disponible"}
+                    </Button>
+                  )}
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -673,23 +696,10 @@ export default function MisInvestigacionesPage() {
         </Card>
       </div>
 
+
+
+      {/* Dialog separado */}
       <Dialog open={isCreatingProject} onOpenChange={setIsCreatingProject}>
-        {shouldShowUploadButton && (
-          <DialogTrigger asChild>
-            <Button 
-              variant="outline" 
-              className="w-full"
-              disabled={!challengeStatus?.isWeekOfUpload}
-              title={!challengeStatus?.isWeekOfUpload ? 
-                "La carga de proyectos solo está disponible durante la semana de carga" : 
-                "Cargar nuevo proyecto"}
-            >
-              {challengeStatus?.isWeekOfUpload ? 
-                "Cargar Proyecto" : 
-                "Carga de proyectos no disponible"}
-            </Button>
-          </DialogTrigger>
-        )}
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Cargar Proyecto</DialogTitle>

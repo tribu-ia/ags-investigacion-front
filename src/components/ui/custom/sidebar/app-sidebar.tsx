@@ -26,23 +26,61 @@ import { useChallengeStatus } from '@/contexts/challenge-status-context';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { challengeStatus } = useChallengeStatus();
-  const [navItems, setNavItems] = useState(data.navMain);
+  const [navItems, setNavItems] = useState<typeof data.navMain>([]);
 
   useEffect(() => {
-    if (challengeStatus) {
-      const updatedNavItems = data.navMain.map(section => {
-        if (section.title === "Documentation") {
-          return {
-            ...section,
-            items: section.items?.filter(item => 
-              item.title !== "Proyectos" || challengeStatus.isWeekOfVoting
-            )
-          };
-        }
-        return section;
-      });
-      setNavItems(updatedNavItems);
+    const baseNavItems = [
+      {
+        title: "Centro de investigacion",
+        url: "##",
+        icon: Bot,
+        isActive: true,
+        items: [
+          {
+            title: "Agente investigador",
+            url: "/dashboard/centro-investigacion/agente",
+          },
+          {
+            title: "Guias y recursos",
+            url: "/dashboard/centro-investigacion/guias",
+          }
+        ],
+      },
+      {
+        title: "Documentation",
+        url: "#",
+        icon: BookOpen,
+        isActive: true,
+        items: [
+          {
+            title: "Investigar nuevo agente",
+            url: "/dashboard/documentation/nuevo-agente",
+          },
+          {
+            title: "Mis investigaciones",
+            url: "/dashboard/documentation/mis-investigaciones",
+          },
+          {
+            title: "Proximos eventos",
+            url: "/dashboard/documentation/eventos",
+          }
+        ],
+      }
+    ];
+
+    if (challengeStatus?.isWeekOfVoting) {
+      // Encontrar la sección de Documentation
+      const docSection = baseNavItems.find(section => section.title === "Documentation");
+      if (docSection && docSection.items) {
+        // Agregar la opción de Proyectos
+        docSection.items.push({
+          title: "Proyectos",
+          url: "/dashboard/documentation/proyectos",
+        });
+      }
     }
+
+    setNavItems(baseNavItems);
   }, [challengeStatus]);
 
   return (
@@ -76,48 +114,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 }
 
 const data = {
-  navMain: [
-    {
-      title: "Centro de investigacion",
-      url: "##",
-      icon: Bot,
-      isActive: true,
-      items: [
-        {
-          title: "Agente investigador",
-          url: "/dashboard/centro-investigacion/agente",
-        },
-        {
-          title: "Guias y recursos",
-          url: "/dashboard/centro-investigacion/guias",
-        }
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
-      isActive: true,
-      items: [
-        {
-          title: "Investigar nuevo agente",
-          url: "/dashboard/documentation/nuevo-agente",
-        },
-        {
-          title: "Mis investigaciones",
-          url: "/dashboard/documentation/mis-investigaciones",
-        },
-        {
-          title: "Proximos eventos",
-          url: "/dashboard/documentation/eventos",
-        },
-        {
-          title: "Proyectos",
-          url: "/dashboard/documentation/proyectos",
-        }
-      ],
-    }
-  ],
   navSecondary: [
     // {
     //   title: "Support",
