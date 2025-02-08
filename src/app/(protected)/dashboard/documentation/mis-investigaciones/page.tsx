@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -23,6 +24,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Calendar, Trophy, Lightbulb, Target } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { useChallengeStatus } from '@/contexts/challenge-status-context';
 
 type ResearcherDetails = {
   name: string;
@@ -37,6 +40,8 @@ type ResearcherDetails = {
   agentName: string;
   status: string;
   presentationWeek: string;
+  assignmentId: string;
+  showOrder: string;
 };
 
 type ResearcherUpdate = {
@@ -50,12 +55,19 @@ export default function MisInvestigacionesPage() {
   const api = useApi();
   const [details, setDetails] = useState<ResearcherDetails | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [updateForm, setUpdateForm] = useState<ResearcherUpdate>({
     currentRole: "",
     githubUsername: "",
     linkedinProfile: "",
   });
+  const [projectForm, setProjectForm] = useState({
+    name: '',
+    description: '',
+    videoUrl: ''
+  });
+  const { challengeStatus } = useChallengeStatus();
 
   useEffect(() => {
     if (profile?.email) {
@@ -95,6 +107,35 @@ export default function MisInvestigacionesPage() {
     }
   };
 
+  const handleCreateProject = async () => {
+    setIsSaving(true);
+    try {
+      if (!details?.assignmentId) {
+        throw new Error('No assignment ID found');
+      }
+
+      const payload = {
+        assignmentId: details.assignmentId,
+        title: projectForm.name,
+        description: projectForm.description,
+        youtubeUrl: projectForm.videoUrl
+      };
+
+      const response = await api.post('/researchers-managements/agent-videos/upload', payload);
+      
+      if (response.status === 200 || response.status === 201) {
+        toast.success("¡Proyecto cargado exitosamente! Tu video ha sido registrado y será revisado por el equipo.");
+        setIsCreatingProject(false);
+        setProjectForm({ name: '', description: '', videoUrl: '' });
+      }
+    } catch (error) {
+      console.error('Error uploading project:', error);
+      toast.error("Error al cargar el proyecto. Por favor intente nuevamente.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case "pending":
@@ -108,6 +149,8 @@ export default function MisInvestigacionesPage() {
     }
   };
 
+  const shouldShowUploadButton = details?.showOrder === challengeStatus?.currentMonth;
+
   if (!details) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-6 p-4">
@@ -117,8 +160,8 @@ export default function MisInvestigacionesPage() {
             Para ver tus investigaciones, primero debes registrarte como investigador y seleccionar un agente para investigar.
           </p>
         </div>
-        <a 
-          href="/dashboard/documentation/nuevo-agente" 
+        <a
+          href="/dashboard/documentation/nuevo-agente"
           className="inline-flex items-center justify-center rounded-md bg-primary px-8 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
           Comenzar a Investigar
@@ -215,8 +258,8 @@ export default function MisInvestigacionesPage() {
                         placeholder="https://linkedin.com/in/tu-perfil"
                       />
                     </div>
-                    <Button 
-                      onClick={handleUpdateProfile} 
+                    <Button
+                      onClick={handleUpdateProfile}
                       className="w-full"
                       disabled={isSaving}
                     >
@@ -255,10 +298,79 @@ export default function MisInvestigacionesPage() {
               </div>
               <div className="mt-4">
                 <p className="text-sm text-muted-foreground">
-                  Asegúrate de tener tu presentación lista para la fecha indicada. 
+                  Asegúrate de tener tu presentación lista para la fecha indicada.
                   Recuerda que debes demostrar el funcionamiento de tu investigación.
                 </p>
               </div>
+              <Dialog open={isCreatingProject} onOpenChange={setIsCreatingProject}>
+                {shouldShowUploadButton && (
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      disabled={!challengeStatus?.isWeekOfUpload}
+                      title={!challengeStatus?.isWeekOfUpload ? 
+                        "La carga de proyectos solo está disponible durante la semana de carga" : 
+                        "Cargar nuevo proyecto"}
+                    >
+                      {challengeStatus?.isWeekOfUpload ? 
+                        "Cargar Proyecto" : 
+                        "Carga de proyectos no disponible"}
+                    </Button>
+                  </DialogTrigger>
+                )}
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Cargar Nuevo Proyecto</DialogTitle>
+                    <DialogDescription>
+                      Completa los detalles de la implementación de tú agente
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="projectName">Nombre del Proyecto</Label>
+                      <Input
+                        id="projectName"
+                        value={projectForm.name}
+                        onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
+                        placeholder="Ej: TribuAI Agentico"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="projectDescription">Descripción</Label>
+                      <Textarea
+                        id="projectDescription"
+                        value={projectForm.description}
+                        onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
+                        placeholder="Describe tu proyecto..."
+                        rows={4}
+                        maxLength={250}
+                      />
+                      <div className={`text-sm ${
+                        projectForm.description.length > 450 ? 'text-amber-500' : 'text-muted-foreground'
+                      }`}>
+                        {projectForm.description.length}/250 caracteres
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="videoUrl">URL del Video</Label>
+                      <Input
+                        id="videoUrl"
+                        value={projectForm.videoUrl}
+                        onChange={(e) => setProjectForm({ ...projectForm, videoUrl: e.target.value })}
+                        placeholder="https://www.youtube.com/embed/..."
+                      />
+                    </div>
+                    <Button
+                      onClick={handleCreateProject}
+                      className="w-full"
+                      disabled={isSaving}
+                    >
+                      {isSaving ? "Cargando proyecto..." : "Cargar Proyecto"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardContent>
         </Card>
@@ -361,7 +473,7 @@ export default function MisInvestigacionesPage() {
                         <h4 className="text-base font-medium mb-4">Enfoque 1: Arquitectura Técnica</h4>
                         <div className="space-y-4">
                           <p className="text-sm text-muted-foreground">Este enfoque se centra en la estructura técnica y la implementación del agente.</p>
-                          
+
                           <div>
                             <h5 className="font-medium mb-2">Introducción:</h5>
                             <ul className="text-sm space-y-2 text-muted-foreground">
@@ -609,7 +721,7 @@ export default function MisInvestigacionesPage() {
                 </AccordionContent>
               </AccordionItem>
 
-              
+
             </Accordion>
           </CardContent>
         </Card>
