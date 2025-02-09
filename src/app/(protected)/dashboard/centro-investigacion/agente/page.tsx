@@ -12,12 +12,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlayCircle } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import '@/styles/github-markdown.css';
-import { Progress } from "@/components/ui/progress";
-import { AlertCircle, CheckCircle, Search, Pen } from "lucide-react";
+import { AlertCircle, CheckCircle, Pen } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
+import Image from "next/image";
+import {motion, AnimatePresence} from 'framer-motion';
+import { fadeSlideVariants, iconVariants } from "@/styles/animations";
+import { useSidebar } from "@/components/ui/sidebar";
 
 type ResearcherDetails = {
   name: string;
@@ -55,34 +58,31 @@ def hello_world():
 `;
 
 // Definir tipos para los mensajes
-type ProgressMessage = {
-  type: "progress";
+type StartedMessage = {
+  type: "research_start";
   message: string;
-  data: any;
+  data: {
+    status: 'started';
+  }
+}
+
+type ProgressMessage = {
+  type: "research_progress";
+  message: string;
 };
 
 type WritingProgressMessage = {
   type: "writing_progress";
-  message: "section_start" | "content_chunk" | "section_complete" | "report_complete";
-  data: {
-    section_name?: string;
-    content?: string;
-    completed_sections?: string[];
-  };
+  message: string;
 };
 
-type CompleteMessage = {
-  type: "complete";
+type CompilerProgressMessage = {
+  type: "compiler_progress";
+  message: "final_report_chunk" | "final_report_complete";
   data: {
-    message: string;
-    section: {
-      id: string;
-      name: string;
-      description: string;
-      content: string;
-      research: boolean;
-      status: string;
-    };
+    type: "report_content";
+    content: string;
+    is_complete: boolean;
   };
 };
 
@@ -93,28 +93,75 @@ type ErrorMessage = {
   };
 };
 
-// Agregar el nuevo tipo de mensaje
-type CompilerProgressMessage = {
-  type: "compiler_progress";
-  message: "final_report_chunk";
-  data: {
-    type: "report_content";
-    content: string;
-    is_complete: boolean;
-  };
-};
-
 // Actualizar el tipo WebSocketMessage
-type WebSocketMessage = 
-  | ProgressMessage 
-  | WritingProgressMessage 
-  | CompleteMessage 
-  | ErrorMessage 
+type WebSocketMessage =
+  | StartedMessage
+  | ProgressMessage
+  | WritingProgressMessage
+  | ErrorMessage
   | CompilerProgressMessage;
+
+interface ProgressIndicatorProps {
+  progress: number;
+  currentPhase: string;
+}
+
+// Agregar componente de progreso
+const ProgressIndicator: React.FC<ProgressIndicatorProps> = (
+  { progress, currentPhase }
+) => (
+  <div className="flex items-center justify-center gap-2">
+    <div className="flex items-center gap-1">
+      <AnimatePresence mode="wait">
+        {progress < 100 ? (
+          currentPhase.includes("Escribiendo") ? (
+            <motion.div
+              key="pen"
+              variants={iconVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.2 }}
+            >
+              <Pen className="w-4 h-4 animate-pulse" />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="loader"
+              variants={iconVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.2 }}
+            >
+              <Loader size="xxs" mode="light" />
+            </motion.div>
+          )
+        ) : (
+          <motion.div
+            key="check"
+            variants={iconVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.2 }}
+          >
+            <CheckCircle className="w-4 h-4 text-green-500" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <span className="text-sm font-medium md:truncate md:overflow-hidden md:whitespace-nowrap md:max-w-[350px] inline-block">
+        {currentPhase}
+      </span>
+    </div>
+    <span className="text-sm text-muted-foreground">{Math.round(progress)}%</span>
+  </div>
+);
 
 export default function AgenteInvestigadorPage() {
   const { profile } = useAuth();
   const api = useApi();
+  const { open: isSidebarOpen } = useSidebar();
   const [details, setDetails] = useState<ResearcherDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [markdown, setMarkdown] = useState(markdownExample);
@@ -148,6 +195,7 @@ export default function AgenteInvestigadorPage() {
 
   const loadResearcherDetails = async () => {
     setIsLoading(true);
+
     try {
       const { data } = await api.get<ResearcherDetails>(`/researchers-managements/researchers/details?email=${profile?.email}`);
       setDetails(data);
@@ -176,20 +224,20 @@ export default function AgenteInvestigadorPage() {
       setMessages(prev => [...prev, message]);
 
       switch (message.type) {
-        case 'progress':
+        case 'research_start':
+          handleStartedMessage(message);
+          break;
+        case 'research_progress':
           handleProgressMessage(message);
           break;
         case 'writing_progress':
           handleWritingProgress(message);
           break;
-        case 'complete':
-          handleComplete(message);
+        case 'compiler_progress':
+          handleCompilerProgress(message);
           break;
         case 'error':
           handleError(message);
-          break;
-        case 'compiler_progress':
-          handleCompilerProgress(message);
           break;
       }
     };
@@ -205,14 +253,22 @@ export default function AgenteInvestigadorPage() {
     };
   };
 
+  const handleStartedMessage = (message: StartedMessage) => {
+    setCurrentPhase(message.message);
+    setProgress(0);
+    if (message.data.status === 'started') {
+      setIsStartingResearch(false);
+    }
+  }
+
   const handleProgressMessage = (message: ProgressMessage) => {
     setCurrentPhase(message.message);
+
     // Actualizar progreso basado en el mensaje
     const phaseIndex = phases.research.indexOf(message.message);
     if (phaseIndex !== -1) {
       setProgress((phaseIndex + 1) * (100 / phases.research.length));
     }
-    toast.info(message.message);
   };
 
   const handleWritingProgress = (message: WritingProgressMessage) => {
@@ -225,21 +281,10 @@ export default function AgenteInvestigadorPage() {
           setMarkdown(prev => prev + message.data.content);
         }
         break;
-      case 'section_complete':
-        toast.success(`Sección completada: ${message.data.section_name}`);
-        break;
       case 'report_complete':
         setProgress(100);
-        toast.success("Documento completado");
         break;
     }
-  };
-
-  const handleComplete = (message: CompleteMessage) => {
-    setProgress(100);
-    setCurrentPhase("Completado");
-    setMarkdown(message.data.section.content);
-    toast.success(message.data.message);
   };
 
   const handleError = (message: ErrorMessage) => {
@@ -249,29 +294,34 @@ export default function AgenteInvestigadorPage() {
 
   const handleCompilerProgress = (message: CompilerProgressMessage) => {
     if (message.message === "final_report_chunk") {
-      const { content, is_complete } = message.data;
-      
+      const { content } = message.data;
+
       setStreamingContent(prev => {
         const newContent = prev + content;
         setTimeout(scrollToBottom, 0);
         return newContent;
       });
-      
+
+      if (content) {
+        setCurrentPhase("Generando contenido...");
+      }
+    }
+
+    if (message.message === "final_report_complete") {
+      const { is_complete } = message.data;
       if (is_complete) {
-        setMarkdown(streamingContent);
         setProgress(100);
-        setCurrentPhase("Reporte completado");
-        toast.success("Reporte generado completamente");
-      } else {
-        setCurrentPhase("Generando reporte...");
+        setMarkdown(streamingContent);
+        setCurrentPhase("Investigación completada");
       }
     }
   };
 
   const handleStartResearch = async () => {
     if (!details || !wsRef.current) return;
-    
+
     setIsStartingResearch(true);
+
     try {
       // Enviar mensaje inicial al WebSocket
       const message = {
@@ -280,13 +330,10 @@ export default function AgenteInvestigadorPage() {
         title: details.agentName,
         description: details.agentDescription
       };
-      
+
       wsRef.current.send(JSON.stringify(message));
-      toast.success("Investigación iniciada correctamente");
     } catch (error) {
       toast.error("Error al iniciar la investigación");
-    } finally {
-      setIsStartingResearch(false);
     }
   };
 
@@ -296,28 +343,6 @@ export default function AgenteInvestigadorPage() {
       textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
     }
   };
-
-  // Agregar componente de progreso
-  const ProgressIndicator = () => (
-    <div className="space-y-4 mb-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {progress < 100 ? (
-            currentPhase.includes("Escribiendo") ? (
-              <Pen className="w-4 h-4 animate-pulse" />
-            ) : (
-              <Search className="w-4 h-4 animate-spin" />
-            )
-          ) : (
-            <CheckCircle className="w-4 h-4 text-green-500" />
-          )}
-          <span className="text-sm font-medium">{currentPhase}</span>
-        </div>
-        <span className="text-sm text-muted-foreground">{Math.round(progress)}%</span>
-      </div>
-      <Progress value={progress} className="h-2" />
-    </div>
-  );
 
   if (isLoading) {
     return (
@@ -339,8 +364,8 @@ export default function AgenteInvestigadorPage() {
             Para comenzar tu investigación, primero debes registrarte como investigador.
           </p>
         </div>
-        <a 
-          href="/dashboard/documentation/nuevo-agente" 
+        <a
+          href="/dashboard/documentation/nuevo-agente"
           className="inline-flex items-center justify-center rounded-md bg-primary px-8 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
           Comenzar a Investigar
@@ -350,22 +375,113 @@ export default function AgenteInvestigadorPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header con información del investigador */}
+    <div className="space-y-6">
       <Card className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-none">
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-4">
-            <img
-              src={details.avatarUrl}
-              alt={details.name}
-              className="w-16 h-16 rounded-full ring-2 ring-primary/20"
-            />
+        <CardContent
+          className={`
+            p-4
+            flex
+            flex-col
+            justify-between
+            items-start
+            gap-4
+            md:p-6
+            ${isSidebarOpen ? 'lg:flex-col' : 'lg:flex-row'}
+            ${isSidebarOpen ? 'lg:items-start' : 'lg:items-center'}
+            ${isSidebarOpen ? 'lg:gap-4' : 'lg:gap-8'}
+            xl:flex-row
+            xl:items-center
+            xl:gap-8
+          `}
+        >
+          {/* User info */}
+          <div className="flex items-center gap-2 min-w-fit">
+            <div className="relative aspect-square w-16 h-16 overflow-hidden rounded-full ring-2 ring-primary/20">
+              <Image
+                src={details.avatarUrl}
+                alt={details.name}
+                fill
+                priority
+              />
+            </div>
             <div>
-              <h2 className="text-2xl font-bold">¡Hola, {details.name}!</h2>
-              <p className="text-muted-foreground">
+              <h2 className="text-md md:text-2xl font-bold">¡Hola, {details.name}!</h2>
+              <p className="text-sm md:text-lg text-muted-foreground">
                 Investigando: {details.agentName}
               </p>
             </div>
+          </div>
+
+          {/* Status & Button */}
+          <div
+            className={`
+              w-full
+              flex
+              flex-col
+              items-start
+              sm:w-auto
+              ${isSidebarOpen
+                ? 'lg:items-start lg:self-start'
+                : 'lg:items-end lg:self-end'
+              }
+              xl:items-end
+              xl:self-end
+              transition-all
+              duration-300
+            `}
+          >
+            <div
+              className={`
+                flex
+                items-center
+                gap-2
+                flex-row-reverse
+                ${isSidebarOpen
+                  ? 'lg:flex-row-reverse'
+                  : 'lg:flex-row'
+                }
+                xl:flex-row
+              `}
+            >
+              <span className="text-sm">{isConnected ? 'Conectado' : 'Desconectado'}</span>
+              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+            </div>
+
+            <AnimatePresence mode="wait">
+              {!currentPhase ? (
+                <motion.div
+                  key="button"
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  variants={fadeSlideVariants}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                >
+                  <Button
+                    onClick={handleStartResearch}
+                    disabled={!isConnected || isStartingResearch}
+                    className="mt-1 w-full sm:w-auto transition-opacity duration-200 disabled:opacity-30 hover:opacity-90"
+                  >
+                    <PlayCircle className={`w-4 h-4 ${isStartingResearch && 'animate-pulse'}`} />
+                    {isStartingResearch ? 'Iniciando...' : 'Iniciar investigación'}
+                  </Button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="progress"
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  variants={fadeSlideVariants}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                >
+                  <ProgressIndicator
+                    progress={progress}
+                    currentPhase={currentPhase}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </CardContent>
       </Card>
@@ -385,27 +501,21 @@ export default function AgenteInvestigadorPage() {
               value={streamingContent || markdown}
               onChange={(e) => setMarkdown(e.target.value)}
               readOnly={!!streamingContent}
+              style={{
+                WebkitFontSmoothing: 'antialiased',
+                MozOsxFontSmoothing: 'grayscale'
+              }}
             />
-          </div>
-          <div className="flex justify-end">
-            <Button
-              onClick={handleStartResearch}
-              disabled={isStartingResearch || !markdown}
-              className="gap-2"
-            >
-              <PlayCircle className="w-4 h-4" />
-              {isStartingResearch ? "Iniciando..." : "Iniciar Investigación"}
-            </Button>
           </div>
         </TabsContent>
         <TabsContent value="preview">
           <div className="rounded-lg border bg-card">
             <div className="markdown-preview p-6 min-h-[600px]">
-              <ReactMarkdown 
-                children={streamingContent || markdown}
+              <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeRaw, rehypeSanitize]}
               >
+                {streamingContent || markdown}
               </ReactMarkdown>
             </div>
           </div>
@@ -414,43 +524,30 @@ export default function AgenteInvestigadorPage() {
 
       {/* Detalles del Agente */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="grid gap-4 md:grid-cols-3">
-            <div>
-              <h3 className="font-semibold mb-2">Descripción</h3>
-              <p className="text-sm text-muted-foreground">{details.agentDescription}</p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-2">Categoría</h3>
-              <p className="text-sm text-muted-foreground">{details.agentCategory}</p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-2">Industria</h3>
-              <p className="text-sm text-muted-foreground">{details.agentIndustry}</p>
-            </div>
+        <CardContent className="p-4 md:p-6 flex flex-col md:flex-row md:justify-between gap-4 md:gap-10 lg:gap-16">
+          <div className="basis-auto">
+            <h3 className="font-semibold mb-2">Descripción</h3>
+            <p className="text-sm text-muted-foreground">{details.agentDescription}</p>
+          </div>
+          <div className="basis-auto">
+            <h3 className="font-semibold mb-2">Categoría</h3>
+            <p className="text-sm text-muted-foreground">{details.agentCategory}</p>
+          </div>
+          <div className="basis-auto">
+            <h3 className="font-semibold mb-2">Industria</h3>
+            <p className="text-sm text-muted-foreground">{details.agentIndustry}</p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Indicador de conexión y progreso */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-          <span className="text-sm text-muted-foreground">
-            {isConnected ? 'Conectado' : 'Desconectado'}
-          </span>
-        </div>
-        
-        {currentPhase && <ProgressIndicator />}
-        
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-      </div>
+      {/* Indicador de errores */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 }
