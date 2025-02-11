@@ -9,7 +9,7 @@ import Loader from "@/components/ui/custom/shared/loader";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlayCircle } from "lucide-react";
+import { PlayCircle, Upload } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import '@/styles/github-markdown.css';
 import { AlertCircle, CheckCircle, Pen } from "lucide-react";
@@ -21,6 +21,7 @@ import Image from "next/image";
 import {motion, AnimatePresence} from 'framer-motion';
 import { fadeSlideVariants, iconVariants } from "@/styles/animations";
 import { useSidebar } from "@/components/ui/sidebar";
+import { FinishDocumentationModal } from "@/components/finish-documentation-modal";
 
 type ResearcherDetails = {
   name: string;
@@ -178,6 +179,7 @@ export default function AgenteInvestigadorPage() {
     writing: ["Preparando contenido", "Generando secciones", "Finalizando documento"]
   };
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (profile?.email) {
@@ -456,15 +458,25 @@ export default function AgenteInvestigadorPage() {
                   exit="exit"
                   variants={fadeSlideVariants}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="w-full"
                 >
-                  <Button
-                    onClick={handleStartResearch}
-                    disabled={!isConnected || isStartingResearch}
-                    className="mt-1 w-full sm:w-auto transition-opacity duration-200 disabled:opacity-30 hover:opacity-90"
-                  >
-                    <PlayCircle className={`w-4 h-4 ${isStartingResearch && 'animate-pulse'}`} />
-                    {isStartingResearch ? 'Iniciando...' : 'Iniciar investigación'}
-                  </Button>
+                  <div className="flex flex-col gap-3">
+                    <Button
+                      onClick={handleStartResearch}
+                      disabled={!isConnected || isStartingResearch}
+                      className="mt-1 w-full sm:w-auto transition-opacity duration-200 disabled:opacity-30 hover:opacity-90"
+                    >
+                      <PlayCircle className={`w-4 h-4 ${isStartingResearch && 'animate-pulse'}`} />
+                      {isStartingResearch ? 'Iniciando...' : 'Investigación con Agente'}
+                    </Button>
+                    <Button
+                      onClick={() => setIsModalOpen(true)}
+                      className="w-full sm:w-auto transition-opacity duration-200 hover:opacity-90"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Finalizar documentación
+                    </Button>
+                  </div>
                 </motion.div>
               ) : (
                 <motion.div
@@ -548,6 +560,11 @@ export default function AgenteInvestigadorPage() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+
+      <FinishDocumentationModal 
+        isOpen={isModalOpen} 
+        onOpenChange={setIsModalOpen} 
+      />
     </div>
   );
 }
