@@ -4,14 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build:local": "env-cmd -f .env next build",
-    "build:dev": "env-cmd -f .env.development next build",
-    "build:staging": "env-cmd -f .env.staging next build",
-    "build:prod": "env-cmd -f .env.production next build",
-    "start:local": "env-cmd -f .env next start",
-    "start:dev": "env-cmd -f .env.development next start",
-    "start:staging": "env-cmd -f .env.staging next start",
-    "start:prod": "env-cmd -f .env.production next start",
+    "build": "next build",
+    "start": "next start",
     "lint": "next lint",
     "export": "next export"
   },

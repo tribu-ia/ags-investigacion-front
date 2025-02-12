@@ -21,6 +21,19 @@ const nextConfig = {
   webpack: (config) => {
     config.externals = [...(config.externals || []), { canvas: 'canvas' }]
     return config
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: "upgrade-insecure-requests; connect-src 'self' wss://agente.agentesdeia.info/ws"
+          }
+        ]
+      }
+    ]
   }
 }
 

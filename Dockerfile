@@ -1,38 +1,27 @@
 # Etapa de construcción
 FROM node:18-buster AS builder
-
-# Argumento para el ambiente (dev, staging, prod)
-ARG NODE_ENV=production
-ENV NODE_ENV=${NODE_ENV}
-
 WORKDIR /usr/src/app
+
+# Instalar dependencias
 COPY package.json package-lock.json* ./
 RUN npm ci 
 
-# Copiar archivos de ambiente correspondientes
-COPY .env.* ./
-COPY .env ./
+# Copiar el resto de archivos y construir
 COPY . .
-
-# Construir la aplicación según el ambiente
-RUN if [ "$NODE_ENV" = "production" ] ; then \
-        npm run build:prod ; \
-    else \
-        npm run build:dev ; \
-    fi
+RUN npm run build
 
 # Etapa de producción
 FROM node:18-buster AS production
-ARG NODE_ENV=production
-ENV NODE_ENV=${NODE_ENV}
-
 WORKDIR /usr/src/app
+
+# Copiar archivos necesarios
 COPY --from=builder /usr/src/app ./
+
+# Configuración de producción
+ENV PORT=3000
+ENV NODE_ENV=production
+
 EXPOSE 3000
 
-# Iniciar según el ambiente
-CMD if [ "$NODE_ENV" = "production" ] ; then \
-        npm run start:prod ; \
-    else \
-        npm run start:dev ; \
-    fi
+# Usar next start directamente
+CMD ["npm", "run", "start"]

@@ -244,7 +244,7 @@ export default function AgenteInvestigadorPage() {
   };
 
   const connectWebSocket = () => {
-    const wserver = "ws://agente.agentesdeia.info/ws";
+    const wserver = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8098/ws";
     const ws = new WebSocket(wserver);
     wsRef.current = ws;
 
