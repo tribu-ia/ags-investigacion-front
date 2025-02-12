@@ -22,6 +22,13 @@ import {motion, AnimatePresence} from 'framer-motion';
 import { fadeSlideVariants, iconVariants } from "@/styles/animations";
 import { useSidebar } from "@/components/ui/sidebar";
 import { FinishDocumentationModal } from "@/components/finish-documentation-modal";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 type ResearcherDetails = {
   name: string;
@@ -31,6 +38,20 @@ type ResearcherDetails = {
   agentDescription: string;
   agentCategory: string;
   agentIndustry: string;
+  primaryResearches: {
+    assignmentId: string;
+    agentName: string;
+    agentDescription: string;
+    agentCategory: string;
+    agentIndustry: string;
+  }[];
+  contributorsResearches: {
+    assignmentId: string;
+    name: string;
+    shortDescription: string;
+    category: string;
+    industry: string;
+  }[];
 };
 
 const markdownExample = `# Título del Documento
@@ -180,6 +201,7 @@ export default function AgenteInvestigadorPage() {
   };
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile?.email) {
@@ -194,6 +216,15 @@ export default function AgenteInvestigadorPage() {
       }
     };
   }, [profile?.email]);
+
+  useEffect(() => {
+    if (details) {
+      // Seleccionar el primer agente por defecto
+      const firstPrimaryAgent = details.primaryResearches[0]?.assignmentId;
+      const firstContributorAgent = details.contributorsResearches[0]?.assignmentId;
+      setSelectedAgentId(firstPrimaryAgent || firstContributorAgent || null);
+    }
+  }, [details]);
 
   const loadResearcherDetails = async () => {
     setIsLoading(true);
@@ -347,6 +378,40 @@ export default function AgenteInvestigadorPage() {
     }
   };
 
+  const getSelectedAgentDetails = () => {
+    if (!details || !selectedAgentId) return null;
+
+    const primaryAgent = details.primaryResearches.find(
+      r => r.assignmentId === selectedAgentId
+    );
+    if (primaryAgent) {
+      return {
+        name: primaryAgent.agentName,
+        description: primaryAgent.agentDescription,
+        category: primaryAgent.agentCategory,
+        industry: primaryAgent.agentIndustry,
+        type: 'primary' as const
+      };
+    }
+
+    const contributorAgent = details.contributorsResearches.find(
+      r => r.assignmentId === selectedAgentId
+    );
+    if (contributorAgent) {
+      return {
+        name: contributorAgent.name,
+        description: contributorAgent.shortDescription,
+        category: contributorAgent.category,
+        industry: contributorAgent.industry,
+        type: 'contributor' as const
+      };
+    }
+
+    return null;
+  };
+
+  const selectedAgent = getSelectedAgentDetails();
+
   if (isLoading) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center min-h-[50vh] p-4">
@@ -379,6 +444,48 @@ export default function AgenteInvestigadorPage() {
 
   return (
     <div className="space-y-6">
+      {details && (
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <h2 className="text-lg font-semibold">Tus agentes:</h2>
+            <Select
+              value={selectedAgentId || ''}
+              onValueChange={(value) => setSelectedAgentId(value)}
+            >
+              <SelectTrigger className="w-[250px]">
+                <SelectValue placeholder="Selecciona un agente" />
+              </SelectTrigger>
+              <SelectContent>
+                {details.primaryResearches.length > 0 && (
+                  <>
+                    <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                      Investigaciones Primarias
+                    </div>
+                    {details.primaryResearches.map((research) => (
+                      <SelectItem key={research.assignmentId} value={research.assignmentId}>
+                        {research.agentName}
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
+                {details.contributorsResearches.length > 0 && (
+                  <>
+                    <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                      Investigaciones Contribuidor
+                    </div>
+                    {details.contributorsResearches.map((research) => (
+                      <SelectItem key={research.assignmentId} value={research.assignmentId}>
+                        {research.name}
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
       <Card className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-none">
         <CardContent
           className={`
@@ -410,7 +517,7 @@ export default function AgenteInvestigadorPage() {
             <div>
               <h2 className="text-md md:text-2xl font-bold">¡Hola, {details.name}!</h2>
               <p className="text-sm md:text-lg text-muted-foreground">
-                Investigando: {details.agentName}
+                Estas documentando: {selectedAgent?.name}
               </p>
             </div>
           </div>
@@ -536,22 +643,24 @@ export default function AgenteInvestigadorPage() {
       </Tabs>
 
       {/* Detalles del Agente */}
-      <Card>
-        <CardContent className="p-4 md:p-6 flex flex-col md:flex-row md:justify-between gap-4 md:gap-10 lg:gap-16">
-          <div className="basis-auto">
-            <h3 className="font-semibold mb-2">Descripción</h3>
-            <p className="text-sm text-muted-foreground">{details.agentDescription}</p>
-          </div>
-          <div className="basis-auto">
-            <h3 className="font-semibold mb-2">Categoría</h3>
-            <p className="text-sm text-muted-foreground">{details.agentCategory}</p>
-          </div>
-          <div className="basis-auto">
-            <h3 className="font-semibold mb-2">Industria</h3>
-            <p className="text-sm text-muted-foreground">{details.agentIndustry}</p>
-          </div>
-        </CardContent>
-      </Card>
+      {selectedAgent && (
+        <Card>
+          <CardContent className="p-4 md:p-6 flex flex-col md:flex-row md:justify-between gap-4 md:gap-10 lg:gap-16">
+            <div className="basis-auto">
+              <h3 className="font-semibold mb-2">Descripción</h3>
+              <p className="text-sm text-muted-foreground">{selectedAgent.description}</p>
+            </div>
+            <div className="basis-auto">
+              <h3 className="font-semibold mb-2">Categoría</h3>
+              <p className="text-sm text-muted-foreground">{selectedAgent.category}</p>
+            </div>
+            <div className="basis-auto">
+              <h3 className="font-semibold mb-2">Industria</h3>
+              <p className="text-sm text-muted-foreground">{selectedAgent.industry}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Indicador de errores */}
       {error && (

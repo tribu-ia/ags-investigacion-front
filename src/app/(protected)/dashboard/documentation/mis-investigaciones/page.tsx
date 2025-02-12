@@ -190,13 +190,13 @@ export default function MisInvestigacionesPage() {
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <div className="space-y-4">
-        <h1 className="text-3xl font-bold">Mi Investigación</h1>
+        <h1 className="text-3xl font-bold">Mis Investigación</h1>
         <p className="text-muted-foreground">
           Gestiona y monitorea tu investigación actual.
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6">
         {/* Detalles del Investigador */}
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
