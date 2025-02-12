@@ -673,7 +673,9 @@ export default function AgenteInvestigadorPage() {
 
       <FinishDocumentationModal 
         isOpen={isModalOpen} 
-        onOpenChange={setIsModalOpen} 
+        onOpenChange={setIsModalOpen}
+        assignmentId={selectedAgentId || ''}
+        markdownContent={streamingContent || markdown}
       />
     </div>
   );

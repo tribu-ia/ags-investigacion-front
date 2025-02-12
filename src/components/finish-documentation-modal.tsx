@@ -10,6 +10,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { UploadCloud, X } from "lucide-react";
 import { toast } from "sonner";
+import { useApi } from "@/hooks/use-api";
 
 type FileWithPreview = {
   file: File;
@@ -20,14 +21,20 @@ type FileWithPreview = {
 interface FinishDocumentationModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  assignmentId: string;
+  markdownContent: string;
 }
 
 export function FinishDocumentationModal({
   isOpen,
   onOpenChange,
+  assignmentId,
+  markdownContent,
 }: FinishDocumentationModalProps) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const api = useApi();
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -60,27 +67,6 @@ export function FinishDocumentationModal({
       progress: 0,
     }));
     setFiles((prev) => [...prev, ...newFileObjects]);
-
-    // Simular progreso de carga para cada archivo
-    newFileObjects.forEach((fileObj, index) => {
-      simulateFileUpload(files.length + index);
-    });
-  };
-
-  const simulateFileUpload = (fileIndex: number) => {
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 20;
-      if (progress > 100) {
-        progress = 100;
-        clearInterval(interval);
-      }
-      setFiles((prev) =>
-        prev.map((file, index) =>
-          index === fileIndex ? { ...file, progress } : file
-        )
-      );
-    }, 500);
   };
 
   const removeFile = (index: number) => {
@@ -90,6 +76,50 @@ export function FinishDocumentationModal({
       newFiles.splice(index, 1);
       return newFiles;
     });
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setIsSubmitting(true);
+      const formData = new FormData();
+
+      formData.append("assignmentId", assignmentId);
+      formData.append("markdownContent", markdownContent);
+
+      files.forEach((fileObj) => {
+        formData.append("documents", fileObj.file);
+      });
+
+      await api.post(
+        "/researchers-managements/agent-documentation/finalize",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / (progressEvent.total || 100)
+            );
+            
+            setFiles((prev) =>
+              prev.map((file) => ({
+                ...file,
+                progress: percentCompleted,
+              }))
+            );
+          },
+        }
+      );
+
+      toast.success("Documentación finalizada con éxito");
+      onOpenChange(false);
+    } catch (error) {
+      toast.error("Error al finalizar la documentación");
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -164,16 +194,15 @@ export function FinishDocumentationModal({
         )}
 
         <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+          >
             Cancelar
           </Button>
-          <Button
-            onClick={() => {
-              toast.success("Documentación finalizada con éxito");
-              onOpenChange(false);
-            }}
-          >
-            Finalizar
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? "Enviando..." : "Finalizar"}
           </Button>
         </DialogFooter>
       </DialogContent>
