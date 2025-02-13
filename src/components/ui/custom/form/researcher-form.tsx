@@ -56,7 +56,10 @@ const formSchema = z.object({
   github_username: z.string({
     required_error: "El usuario de GitHub es obligatorio",
   }).min(1, "Por favor ingresa tu usuario de GitHub"),
-  linkedin_profile: z.string().optional(),
+  linkedin_profile: z.string({
+    required_error: "El perfil de LinkedIn es obligatorio",
+  }).min(1, "Por favor ingresa tu perfil de LinkedIn")
+    .url("Por favor ingresa una URL válida de LinkedIn"),
 })
 
 type ApiResponse = {
@@ -464,7 +467,7 @@ export function ResearcherForm() {
                   <FormItem>
                     <FormLabel className="text-base">Perfil de LinkedIn</FormLabel>
                     <FormDescription>
-                      URL de tu perfil de LinkedIn (opcional)
+                      URL de tu perfil de LinkedIn
                     </FormDescription>
                     <FormControl>
                       <Input 
