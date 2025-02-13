@@ -195,6 +195,7 @@ export default function AgenteInvestigadorPage() {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [streamingContent, setStreamingContent] = useState("");
+  const [isGenerationComplete, setIsGenerationComplete] = useState(false);
   const phases = {
     research: ["Iniciando investigación", "Recuperando datos previos", "Generando consultas", "Realizando búsqueda", "Procesando resultados"],
     writing: ["Preparando contenido", "Generando secciones", "Finalizando documento"]
@@ -347,6 +348,7 @@ export default function AgenteInvestigadorPage() {
         setProgress(100);
         setMarkdown(streamingContent);
         setCurrentPhase("Investigación completada");
+        setIsGenerationComplete(true);
       }
     }
   };
@@ -411,6 +413,13 @@ export default function AgenteInvestigadorPage() {
   };
 
   const selectedAgent = getSelectedAgentDetails();
+
+  const isTextareaReadOnly = () => {
+    // Bloquear si:
+    // 1. Hay contenido streaming y la generación no está completa
+    // 2. La investigación está en progreso (progress > 0 y < 100)
+    return (!!streamingContent && !isGenerationComplete) || (progress > 0 && progress < 100);
+  };
 
   if (isLoading) {
     return (
@@ -622,11 +631,19 @@ export default function AgenteInvestigadorPage() {
               placeholder="Escribe tu investigación en markdown..."
               className="min-h-[600px] font-mono bg-card border-none focus-visible:ring-0"
               value={streamingContent || markdown}
-              onChange={(e) => setMarkdown(e.target.value)}
-              readOnly={!!streamingContent}
+              onChange={(e) => {
+                if (isGenerationComplete) {
+                  setStreamingContent(e.target.value);
+                } else {
+                  setMarkdown(e.target.value);
+                }
+              }}
+              readOnly={isTextareaReadOnly()}
               style={{
                 WebkitFontSmoothing: 'antialiased',
-                MozOsxFontSmoothing: 'grayscale'
+                MozOsxFontSmoothing: 'grayscale',
+                opacity: isTextareaReadOnly() ? '0.7' : '1',
+                cursor: isTextareaReadOnly() ? 'not-allowed' : 'text'
               }}
             />
           </div>
