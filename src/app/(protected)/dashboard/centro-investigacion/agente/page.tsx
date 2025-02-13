@@ -558,54 +558,57 @@ export default function AgenteInvestigadorPage() {
             </div>
 
             <AnimatePresence mode="wait">
-              {!currentPhase ? (
-                <motion.div
-                  key="button"
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  variants={fadeSlideVariants}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="w-full"
-                >
-                  <div className="flex flex-col gap-3">
-                    <Button
-                      onClick={handleStartResearch}
-                      disabled={!isConnected || isStartingResearch}
-                      className="mt-1 w-full sm:w-auto transition-opacity duration-200 disabled:opacity-30 hover:opacity-90"
-                    >
-                      <PlayCircle className={`w-4 h-4 ${isStartingResearch && 'animate-pulse'}`} />
-                      {isStartingResearch ? 'Iniciando...' : 'Investigación con Agente'}
-                    </Button>
-                    <Button
-                      onClick={() => setIsModalOpen(true)}
-                      className="w-full sm:w-auto transition-opacity duration-200 hover:opacity-90"
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Finalizar documentación
-                    </Button>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="progress"
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  variants={fadeSlideVariants}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                >
-                  <ProgressIndicator
-                    progress={progress}
-                    currentPhase={currentPhase}
-                  />
-                </motion.div>
-              )}
+              <motion.div
+                key="button"
+                initial="enter"
+                animate="center"
+                exit="exit"
+                variants={fadeSlideVariants}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="w-full"
+              >
+                <div className="flex flex-col gap-3">
+                  <Button
+                    onClick={handleStartResearch}
+                    disabled={!isConnected || isStartingResearch || (!!currentPhase && progress < 100)}
+                    className="mt-1 w-full sm:w-auto transition-opacity duration-200 disabled:opacity-30 hover:opacity-90"
+                  >
+                    <PlayCircle className={`w-4 h-4 ${isStartingResearch && 'animate-pulse'}`} />
+                    {isStartingResearch ? 'Iniciando...' : 'Investigación con Agente'}
+                  </Button>
+                  <Button
+                    onClick={() => setIsModalOpen(true)}
+                    disabled={!!currentPhase && progress < 100}
+                    className="w-full sm:w-auto transition-opacity duration-200 hover:opacity-90 disabled:opacity-30"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Finalizar documentación
+                  </Button>
+                </div>
+              </motion.div>
             </AnimatePresence>
           </div>
         </CardContent>
+        {currentPhase && (
+          <motion.div
+            key="progress"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <Card className="!mt-0 rounded-tr-none rounded-tl-none overflow-hidden">
+              <CardContent className="p-2">
+                <ProgressIndicator
+                  progress={progress}
+                  currentPhase={currentPhase}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
       </Card>
-
+      
       {/* Editor y Preview */}
       <Tabs defaultValue="editor" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
