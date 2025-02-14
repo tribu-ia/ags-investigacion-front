@@ -364,7 +364,8 @@ export default function AgenteInvestigadorPage() {
         type: "start_research",
         section_id: "test-section-1",
         title: selectedAgent?.name,
-        description: selectedAgent?.description
+        description: selectedAgent?.description,
+        assignment_id: selectedAgentId
       };
 
       wsRef.current.send(JSON.stringify(message));

@@ -101,8 +101,13 @@ export default function MisInvestigacionesPage() {
   const handleUpdateProfile = async () => {
     setIsSaving(true);
     try {
-      await api.put(`/researchers-managements/researchers/${profile?.email}/profile`, updateForm);
+      await api.put(
+        `/researchers-managements/researchers/${profile?.email}/profile`, 
+        updateForm
+      );
+      
       await loadResearcherDetails();
+      
       setIsEditing(false);
       toast.success("Perfil actualizado correctamente");
     } catch (error) {
