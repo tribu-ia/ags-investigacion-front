@@ -1,16 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { UploadCloud, X } from "lucide-react";
 import { toast } from "sonner";
 import { useApi } from "@/hooks/use-api";
+import { DocumentationSuccessDialog } from "./documentation-success-dialog";
+import { GenericModal } from "@/components/ui/custom/shared/generic-modal";
 
 type FileWithPreview = {
   file: File;
@@ -18,11 +13,16 @@ type FileWithPreview = {
   progress?: number;
 };
 
+type FinishDocumentationResponse = {
+  githubPullRequest: string;
+};
+
 interface FinishDocumentationModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   assignmentId: string;
   markdownContent: string;
+  onSuccess?: (success: boolean) => void;
 }
 
 export function FinishDocumentationModal({
@@ -30,10 +30,13 @@ export function FinishDocumentationModal({
   onOpenChange,
   assignmentId,
   markdownContent,
+  onSuccess,
 }: FinishDocumentationModalProps) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [pullRequestUrl, setPullRequestUrl] = useState<string>("");
   const api = useApi();
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -90,7 +93,7 @@ export function FinishDocumentationModal({
         formData.append("documents", fileObj.file);
       });
 
-      await api.post(
+      const response = await api.post<FinishDocumentationResponse>(
         "/researchers-managements/agent-documentation/finalize",
         formData,
         {
@@ -101,7 +104,7 @@ export function FinishDocumentationModal({
             const percentCompleted = Math.round(
               (progressEvent.loaded * 100) / (progressEvent.total || 100)
             );
-            
+
             setFiles((prev) =>
               prev.map((file) => ({
                 ...file,
@@ -112,7 +115,8 @@ export function FinishDocumentationModal({
         }
       );
 
-      toast.success("Documentación finalizada con éxito");
+      setPullRequestUrl(response.data.githubPullRequest);
+      setShowSuccessDialog(true);
       onOpenChange(false);
     } catch (error) {
       toast.error("Error al finalizar la documentación");
@@ -122,12 +126,23 @@ export function FinishDocumentationModal({
     }
   };
 
+  const handleSuccessDialogClose = () => {
+    setShowSuccessDialog(false);
+    onSuccess?.(false);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Finalizar Documentación</DialogTitle>
-        </DialogHeader>
+    <>
+      <GenericModal
+        isOpen={isOpen}
+        onClose={() => onOpenChange(false)}
+        title="Finalizar Documentación"
+        confirmButtonText={isSubmitting ? "Enviando..." : "Finalizar"}
+        onConfirm={handleSubmit}
+        cancelButtonText="Cancelar"
+        onCancel={() => onOpenChange(false)}
+        size="md"
+      >
         <p>¿Estás seguro de finalizar la documentación?</p>
         <p className="text-sm text-muted-foreground">
           Tienes <span className="font-bold">{files.length}</span> archivos
@@ -192,20 +207,13 @@ export function FinishDocumentationModal({
             </div>
           </div>
         )}
+      </GenericModal>
 
-        <DialogFooter className="mt-4">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
-            Cancelar
-          </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? "Enviando..." : "Finalizar"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <DocumentationSuccessDialog
+        isOpen={showSuccessDialog}
+        onOpenChange={handleSuccessDialogClose}
+        pullRequestUrl={pullRequestUrl}
+      />
+    </>
   );
 }
