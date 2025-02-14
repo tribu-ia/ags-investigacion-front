@@ -31,7 +31,7 @@ export function ResourceGrid({
 
   return (
     <motion.div
-      className="grid auto-rows-fr gap-4 md:grid-cols-2 lg:grid-cols-3"
+      className="grid auto-rows-fr gap-4 grid-cols-1 lg:grid-cols-3"
       layout="position"
       layoutRoot
     >

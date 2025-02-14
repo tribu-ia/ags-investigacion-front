@@ -39,7 +39,7 @@ export function ResourceItem({ resource }: ResourceCardProps) {
                 {resource.description}
               </CardDescription>
             </div>
-            <div className="absolute right-0 top-0 flex flex-col gap-2">
+            <div className=" right-0 top-0 flex flex-col gap-2">
               <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
                 {resource.type}
               </span>
