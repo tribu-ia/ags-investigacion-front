@@ -12,7 +12,6 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form"
 import { Textarea } from "@/components/ui/textarea"
@@ -20,33 +19,30 @@ import { AgentResult } from "./agent-result"
 
 // Función para sanitizar el input
 const sanitizeInput = (input: string): string => {
-  // Eliminar cualquier HTML
   const sanitized = DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: [], // No permitir ninguna etiqueta HTML
-    ALLOWED_ATTR: [], // No permitir ningún atributo
+    ALLOWED_TAGS: [], 
+    ALLOWED_ATTR: [], 
   })
   
-  // Eliminar caracteres especiales y limitar a caracteres seguros
   return sanitized
-    .replace(/[<>{}]/g, '') // Eliminar caracteres peligrosos
-    .replace(/[^\w\s.,!?¿¡áéíóúÁÉÍÓÚñÑ-]/g, '') // Solo permitir letras, números y puntuación básica
+    .replace(/[<>{}]/g, '')
+    .replace(/[^\w\s.,!?¿¡áéíóúÁÉÍÓÚñÑ-]/g, '')
     .trim()
 }
-// Definir una URL base que use la variable de entorno o un fallback
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://tribu-back.pruebas-entrevistador-inteligente.site'
 
 const formSchema = z.object({
   useCase: z.string()
     .min(10, "Por favor, describe tu caso de uso en al menos 10 caracteres.")
     .max(1000, "La descripción no puede exceder los 1000 caracteres.")
-    .transform(sanitizeInput) // Sanitizar el input
+    .transform(sanitizeInput)
     .refine(
       (val) => !/[<>{}]/.test(val), 
       "El texto contiene caracteres no permitidos"
     )
 })
 
-// Actualizar el tipo AgentData para reflejar la estructura real
 type AgentData = {
   id: string
   name: string
@@ -58,7 +54,6 @@ type AgentData = {
   tags: string[]
 }
 
-// Tipo para la respuesta de la API
 type APIResponse = {
   results: Array<[{
     metadata: {
@@ -75,7 +70,6 @@ type APIResponse = {
   }, number]>
 }
 
-// Función auxiliar para procesar tags
 const processTags = (tags: string | string[] | null | undefined): string[] => {
   if (!tags) return []
   if (Array.isArray(tags)) return tags.map(sanitizeInput)
@@ -90,15 +84,12 @@ export function LearnerForm() {
     resolver: zodResolver(formSchema),
   })
 
-  // Función auxiliar para procesar las características y casos de uso
   const processStringList = (str: string): string[] => {
     if (!str) return []
-    // Eliminar cualquier prefijo común como "Key Features: " o "Use Cases: "
     const cleanStr = str.replace(/^(Key Features:|Use Cases:)\s*/i, '')
-    // Dividir por comas o saltos de línea
     return cleanStr.split(/[,\n]/)
       .map(item => item.trim())
-      .filter(item => item && !item.startsWith('-')) // Filtrar items vacíos y bullets
+      .filter(item => item && !item.startsWith('-'))
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -130,7 +121,6 @@ export function LearnerForm() {
         throw new Error('Formato de respuesta inválido')
       }
 
-      // Transformar los resultados al formato esperado
       const transformedResults = data.results
         .slice(0, 3)
         .map(([result]) => {

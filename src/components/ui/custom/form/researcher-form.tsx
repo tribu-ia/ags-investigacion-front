@@ -212,7 +212,7 @@ export function ResearcherForm() {
   const renderSuccessDialog = () => {
     if (!successData) return null;
 
-    const isPrimaryResearcher = successData.researcher_type === "primary";
+    const isPrimaryResearcher = successData.researcher_type === "PRIMARY";
 
     return (
       <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
@@ -359,6 +359,11 @@ export function ResearcherForm() {
     }
   };
 
+  const handleSuccess = (data: SuccessResponse) => {
+    setSuccessData(data)
+    setShowSuccessModal(true)
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -463,14 +468,9 @@ export function ResearcherForm() {
                 </Button>
 
 
-                <SelectAgentModal
+                <SelectAgentModal 
                   email={profile?.email || ""}
-                  onSuccess={() => {
-                    // Recargar los datos del investigador
-                    if (profile?.email) {
-                      loadResearcherDetails()
-                    }
-                  }}
+                  onSuccess={handleSuccess}
                   refreshAgentKey={refreshAgentKey}
                 />
 
@@ -512,15 +512,15 @@ export function ResearcherForm() {
 
   // Si no existe el investigador, mostrar el formulario de registro
   return (
-    <NewResearcherForm 
-      onSuccess={(data) => {
-        setSuccessData(data)
-        setShowSuccessModal(true)
-      }}
-      initialData={{
-        name: profile?.name || "",
-        email: profile?.email || "",
-      }}
-    />
+    <>
+      <NewResearcherForm 
+        onSuccess={handleSuccess}
+        initialData={{
+          name: profile?.name || "",
+          email: profile?.email || "",
+        }}
+      />
+      {renderSuccessDialog()}
+    </>
   )
 }

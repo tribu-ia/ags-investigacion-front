@@ -20,10 +20,11 @@ import { InfoIcon, Settings } from "lucide-react"
 import { AgentSearch } from "./agent-search"
 import { toast } from "sonner"
 import { useApi } from "@/hooks/use-api"
+import { SuccessResponse } from "@/types/researcher"
 
 interface SelectAgentModalProps {
     email: string;
-    onSuccess: () => void;
+    onSuccess: (data: SuccessResponse) => void;
     refreshAgentKey: number;
 }
 
@@ -47,13 +48,16 @@ export function SelectAgentModal({ email, onSuccess, refreshAgentKey }: SelectAg
                 researcher_type: researcherType
             }
 
-            await api.post('/researchers-managements/researchers/assign-agent', payload)
+            const { data } = await api.post<SuccessResponse>(
+                '/researchers-managements/researchers/assign-agent', 
+                payload
+            )
 
             setIsOpen(false)
             toast.success("Agente asignado correctamente")
             setSelectedAgent("")
             setResearcherType("contributor")
-            onSuccess()
+            onSuccess(data)
         } catch (error) {
             console.error('Error assigning agent:', error)
             toast.error("Error al asignar el agente")

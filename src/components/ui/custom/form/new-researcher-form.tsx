@@ -26,6 +26,7 @@ import { InfoIcon } from "lucide-react"
 import { AgentSearch } from "./agent-search"
 import { useApi } from "@/hooks/use-api"
 import { toast } from "sonner"
+import { SuccessResponse } from "@/types/researcher"
 
 const formSchema = z.object({
   agent: z.string({
@@ -51,10 +52,14 @@ const formSchema = z.object({
     required_error: "El perfil de LinkedIn es obligatorio",
   }).min(1, "Por favor ingresa tu perfil de LinkedIn")
     .url("Por favor ingresa una URL válida de LinkedIn"),
+  current_role: z.string({
+    required_error: "El rol actual es obligatorio",
+  }).min(2, "Por favor ingresa tu rol actual")
+    .max(100, "El rol no puede exceder los 100 caracteres"),
 })
 
 interface NewResearcherFormProps {
-  onSuccess: (data: any) => void;
+  onSuccess: (data: SuccessResponse) => void;
   initialData?: {
     name: string;
     email: string;
@@ -77,6 +82,7 @@ export function NewResearcherForm({ onSuccess, initialData }: NewResearcherFormP
       github_username: "",
       linkedin_profile: "",
       agent: "",
+      current_role: "",
     },
   })
 
@@ -85,8 +91,11 @@ export function NewResearcherForm({ onSuccess, initialData }: NewResearcherFormP
     setErrorMessage(null)
     
     try {
-      const response = await api.post('/researchers-managements/researchers', values)
-      onSuccess(response.data)
+      const { data } = await api.post<SuccessResponse>(
+        '/researchers-managements/researchers', 
+        values
+      )
+      onSuccess(data)
     } catch (error: any) {
       console.error('Error submitting form:', error)
       setErrorMessage(error.response?.data?.message || "Error al enviar el formulario")
@@ -287,6 +296,27 @@ export function NewResearcherForm({ onSuccess, initialData }: NewResearcherFormP
                     <Input
                       className="text-base px-4 py-2"
                       placeholder="https://linkedin.com/in/tu-perfil"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="current_role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base">Rol Actual</FormLabel>
+                  <FormDescription>
+                    Tu rol o cargo actual en la empresa
+                  </FormDescription>
+                  <FormControl>
+                    <Input
+                      className="text-base px-4 py-2"
+                      placeholder="Ej: IA Engineer, Data Scientist, Full Stack Developer, etc."
                       {...field}
                     />
                   </FormControl>
