@@ -10,6 +10,7 @@
     "export": "next export"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^1.1.9",
     "@hookform/resolvers": "^3.9.1",
     "@lottiefiles/dotlottie-react": "^0.12.3",
     "@octokit/rest": "^21.0.2",
@@ -31,10 +32,12 @@
     "@react-spring/three": "^9.7.3",
     "@react-three/drei": "^9.92.7",
     "@react-three/fiber": "^8.15.12",
+    "ai": "^4.1.16",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
+    "d3-scale": "^4.0.2",
     "framer-motion": "^10.18.0",
     "framer-motion-3d": "^10.18.0",
     "googleapis": "^144.0.0",
@@ -58,6 +61,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/d3-scale": "^4.0.8",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

@@ -29,7 +29,7 @@ export async function GET() {
     });
 
     // Your spreadsheet ID
-    const range = "Hoja 1!A1:E10"; // The range you want to fetch
+    const range = "Hoja 1!A1:F10"; // The range you want to fetch
 
     // Fetch data from the spreadsheet
     const response = await sheets.spreadsheets.values.get({
