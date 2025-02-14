@@ -22,6 +22,7 @@ interface FinishDocumentationModalProps {
   onOpenChange: (open: boolean) => void;
   assignmentId: string;
   markdownContent: string;
+  onSuccess?: (success: boolean) => void;
 }
 
 export function FinishDocumentationModal({
@@ -29,6 +30,7 @@ export function FinishDocumentationModal({
   onOpenChange,
   assignmentId,
   markdownContent,
+  onSuccess,
 }: FinishDocumentationModalProps) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -124,6 +126,11 @@ export function FinishDocumentationModal({
     }
   };
 
+  const handleSuccessDialogClose = () => {
+    setShowSuccessDialog(false);
+    onSuccess?.(false);
+  };
+
   return (
     <>
       <GenericModal
@@ -204,7 +211,7 @@ export function FinishDocumentationModal({
 
       <DocumentationSuccessDialog
         isOpen={showSuccessDialog}
-        onOpenChange={setShowSuccessDialog}
+        onOpenChange={handleSuccessDialogClose}
         pullRequestUrl={pullRequestUrl}
       />
     </>

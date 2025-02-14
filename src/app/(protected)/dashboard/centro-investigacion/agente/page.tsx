@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useApi } from "@/hooks/use-api";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,6 +44,7 @@ type ResearcherDetails = {
     agentDescription: string;
     agentCategory: string;
     agentIndustry: string;
+    status: string;
   }[];
   contributorsResearches: {
     assignmentId: string;
@@ -51,6 +52,7 @@ type ResearcherDetails = {
     shortDescription: string;
     category: string;
     industry: string;
+    status: string;
   }[];
 };
 
@@ -204,6 +206,11 @@ export default function AgenteInvestigadorPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
 
+  const activeResearches = useMemo(() => ({
+    primary: details?.primaryResearches.filter(r => r.status === 'active') || [],
+    contributor: details?.contributorsResearches.filter(r => r.status === 'active') || []
+  }), [details]);
+
   useEffect(() => {
     if (profile?.email) {
       loadResearcherDetails();
@@ -220,12 +227,12 @@ export default function AgenteInvestigadorPage() {
 
   useEffect(() => {
     if (details) {
-      // Seleccionar el primer agente por defecto
-      const firstPrimaryAgent = details.primaryResearches[0]?.assignmentId;
-      const firstContributorAgent = details.contributorsResearches[0]?.assignmentId;
-      setSelectedAgentId(firstPrimaryAgent || firstContributorAgent || null);
+      const firstActiveAgent = activeResearches.primary[0]?.assignmentId || 
+                             activeResearches.contributor[0]?.assignmentId || 
+                             null;
+      setSelectedAgentId(firstActiveAgent);
     }
-  }, [details]);
+  }, [details, activeResearches]);
 
   const loadResearcherDetails = async () => {
     setIsLoading(true);
@@ -421,6 +428,12 @@ export default function AgenteInvestigadorPage() {
     return (!!streamingContent && !isGenerationComplete) || (progress > 0 && progress < 100);
   };
 
+  const handleSuccessDialogClose = () => {
+    setMarkdown(markdownExample);
+    setStreamingContent("");
+    loadResearcherDetails();
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center min-h-[50vh] p-4">
@@ -451,6 +464,25 @@ export default function AgenteInvestigadorPage() {
     );
   }
 
+  if (activeResearches.primary.length === 0 && activeResearches.contributor.length === 0) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-6 p-4">
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-bold">No tienes investigaciones activas</h2>
+          <p className="text-muted-foreground max-w-md">
+            Aquí no termina todo, puedes investigar un nuevo agente.
+          </p>
+        </div>
+        <a
+          href="/dashboard/documentation/nuevo-agente"
+          className="inline-flex items-center justify-center rounded-md bg-primary px-8 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+        >
+          Investigar nuevo agente
+        </a>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {details && (
@@ -465,24 +497,24 @@ export default function AgenteInvestigadorPage() {
                 <SelectValue placeholder="Selecciona un agente" />
               </SelectTrigger>
               <SelectContent>
-                {details.primaryResearches.length > 0 && (
+                {activeResearches.primary.length > 0 && (
                   <>
                     <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
                       Investigaciones Primarias
                     </div>
-                    {details.primaryResearches.map((research) => (
+                    {activeResearches.primary.map((research) => (
                       <SelectItem key={research.assignmentId} value={research.assignmentId}>
                         {research.agentName}
                       </SelectItem>
                     ))}
                   </>
                 )}
-                {details.contributorsResearches.length > 0 && (
+                {activeResearches.contributor.length > 0 && (
                   <>
                     <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
                       Investigaciones Contribuidor
                     </div>
-                    {details.contributorsResearches.map((research) => (
+                    {activeResearches.contributor.map((research) => (
                       <SelectItem key={research.assignmentId} value={research.assignmentId}>
                         {research.name}
                       </SelectItem>
@@ -696,6 +728,7 @@ export default function AgenteInvestigadorPage() {
         onOpenChange={setIsModalOpen}
         assignmentId={selectedAgentId || ''}
         markdownContent={streamingContent || markdown}
+        onSuccess={handleSuccessDialogClose}
       />
     </div>
   );
