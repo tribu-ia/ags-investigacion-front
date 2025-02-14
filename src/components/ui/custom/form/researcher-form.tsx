@@ -25,8 +25,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog"
-import { Calendar, Clock, Github, Linkedin, Discord } from "lucide-react"
+import { Calendar, Clock, Github, Linkedin, Discord, XCircle, PlusCircle, Settings, BookOpen } from "lucide-react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   HoverCard,
@@ -35,6 +36,12 @@ import {
 } from "@/components/ui/hover-card"
 import { InfoIcon } from "lucide-react"
 import { useRouter } from 'next/navigation'
+import { Separator } from "@/components/ui/separator"
+import Loader from "@/components/ui/custom/shared/loader";
+import { toast } from "sonner"
+import { SelectAgentModal } from "./select-agent-modal"
+import { EditProfileModal } from "./edit-profile-modal"
+import { NewResearcherForm } from "./new-researcher-form"
 
 const formSchema = z.object({
   agent: z.string({
@@ -91,16 +98,49 @@ type SuccessResponse = {
   presentationDateTime: string | null;
 }
 
+// Definir tipos
+type Researcher = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  githubUsername: string;
+  avatarUrl: string;
+  repositoryUrl: string;
+  linkedinProfile: string;
+  createdAt: string;
+  currentRol: string;
+};
+
+type ResearcherUpdate = {
+  currentRole: string;
+  githubUsername: string;
+  linkedinProfile: string;
+};
+
 export function ResearcherForm() {
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [refreshAgentKey, setRefreshAgentKey] = useState(0)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successData, setSuccessData] = useState<SuccessResponse | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [existingResearcher, setExistingResearcher] = useState<Researcher | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const { profile } = useAuth()
   const api = useApi()
   const router = useRouter()
-  
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [updateForm, setUpdateForm] = useState<ResearcherUpdate>({
+    currentRole: "",
+    githubUsername: "",
+    linkedinProfile: "",
+  });
+  const [isSelectingAgent, setIsSelectingAgent] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState("");
+  const [researcherType, setResearcherType] = useState<"primary" | "contributor">("contributor");
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
   })
@@ -112,36 +152,49 @@ export function ResearcherForm() {
     }
   }, [profile, form])
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true)
-    setErrorMessage(null)
-    
-    try {
-      const formDataWithEmail = {
-        ...values,
-        email: profile?.email
+  useEffect(() => {
+    const checkExistingResearcher = async () => {
+      if (!profile?.email) {
+        setError("No se encontró información del usuario. Por favor, inicia sesión nuevamente.");
+        setIsLoading(false);
+        return;
       }
 
-      const { data } = await api.post<SuccessResponse>('/researchers-managements/researchers', formDataWithEmail)
+      try {
+        const response = await api.get<Researcher>(`/researchers-managements/researchers?email=${profile.email}`);
 
-      if (!data.success) {
-        throw new Error(data.message || 'Error al enviar el formulario')
+        if (response && response.data) {
+          setExistingResearcher(response.data);
+          setError(null);
+        } else {
+          setExistingResearcher(null);
+        }
+      } catch (error: any) {
+        if (error.response?.status !== 404) {
+          console.error('Error checking researcher:', error);
+          setError("Error al verificar el estado del investigador. Por favor, intenta nuevamente.");
+        } else {
+          setExistingResearcher(null);
+          setError(null);
+        }
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      setSuccessData(data)
-      setShowSuccessModal(true)
-      form.reset()
-      setRefreshAgentKey(prev => prev + 1)
-    } catch (error: any) {
-      setErrorMessage(
-        error.response?.data?.message || 
-        error.message || 
-        'Error al enviar el formulario'
-      )
-    } finally {
-      setIsSubmitting(false)
+    checkExistingResearcher();
+  }, [profile?.email]);
+
+  useEffect(() => {
+    if (existingResearcher) {
+      setUpdateForm({
+        currentRole: existingResearcher.currentRol || "",
+        githubUsername: existingResearcher.githubUsername || "",
+        linkedinProfile: existingResearcher.linkedinProfile || "",
+      });
     }
-  }
+  }, [existingResearcher]);
+
 
   const formatDateTime = (dateTimeStr: string) => {
     const date = new Date(dateTimeStr)
@@ -166,8 +219,8 @@ export function ResearcherForm() {
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>
-              ¡Bienvenido a TribuIA/Agentes! - {isPrimaryResearcher ? 
-                "Investigador Primario" : 
+              ¡Bienvenido a TribuIA/Agentes! - {isPrimaryResearcher ?
+                "Investigador Primario" :
                 "Investigador Contribuidor"}
             </DialogTitle>
           </DialogHeader>
@@ -206,7 +259,7 @@ export function ResearcherForm() {
                   height={200}
                   className="rounded-lg shadow-md"
                 />
-                <a 
+                <a
                   href="https://discord.gg/VJzNePg4fB"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -223,7 +276,7 @@ export function ResearcherForm() {
                   Accede al centro de investigación para comenzar a documentar
                 </p>
                 <div className="flex flex-col gap-4 w-full max-w-sm">
-                  <Button 
+                  <Button
                     onClick={() => {
                       router.push('/dashboard/centro-investigacion/agente')
                       setShowSuccessModal(false)
@@ -231,7 +284,7 @@ export function ResearcherForm() {
                   >
                     Ir al Centro de Investigación
                   </Button>
-                  <a 
+                  <a
                     href="https://github.com/TribuAguirre/tribu-ia-docs"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -249,250 +302,225 @@ export function ResearcherForm() {
     );
   };
 
-  return (
-    <>
+  const handleUpdateProfile = async () => {
+    setIsSaving(true);
+    try {
+      if (!profile?.email) {
+        throw new Error('No email found');
+      }
+
+      await api.put(
+        `/researchers-managements/researchers/${profile.email}/profile`,
+        updateForm
+      );
+
+      // Recargar los datos del investigador
+      const { data } = await api.get<Researcher>(`/researchers-managements/researchers?email=${profile.email}`);
+      setExistingResearcher(data);
+
+      setIsEditing(false);
+      toast.success("Perfil actualizado correctamente");
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error("Error al actualizar el perfil");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleNewAgentSubmit = async () => {
+    setIsSaving(true);
+    try {
+      if (!profile?.email || !selectedAgent) {
+        throw new Error('Información incompleta');
+      }
+
+      const payload = {
+        email: profile.email,
+        agent: selectedAgent,
+        researcher_type: researcherType
+      };
+
+      await api.post('/researchers-managements/researchers/assign-agent', payload);
+
+      // Recargar los datos del investigador
+      const { data } = await api.get<Researcher>(`/researchers-managements/researchers?email=${profile.email}`);
+      setExistingResearcher(data);
+
+      setIsSelectingAgent(false);
+      toast.success("Agente asignado correctamente");
+      setSelectedAgent("");
+      setResearcherType("contributor");
+    } catch (error) {
+      console.error('Error assigning agent:', error);
+      toast.error("Error al asignar el agente");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="space-y-4 text-center">
+          <Loader />
+          <p className="text-muted-foreground">Verificando información...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
       <Card className="mt-4">
         <CardContent className="p-6">
-          {errorMessage && (
-            <div className="mb-4 p-4 border border-red-400 bg-red-50 text-red-700 rounded-md flex items-center gap-2">
-              <svg 
-                width="20" 
-                height="20" 
-                viewBox="0 0 20 20" 
-                fill="none" 
-                xmlns="http://www.w3.org/2000/svg"
-                className="flex-shrink-0"
-              >
-                <path 
-                  d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
-                <path 
-                  d="M10 6.5V10" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
-                <circle 
-                  cx="10" 
-                  cy="13.5" 
-                  r="0.5" 
-                  fill="currentColor" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <span className="flex-1">{errorMessage}</span>
+          <div className="space-y-4 text-center">
+            <div className="mx-auto w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+              <XCircle className="h-6 w-6 text-red-600" />
             </div>
-          )}
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="researcher_type"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <FormLabel className="text-base">Tipo de Investigador</FormLabel>
-                      <HoverCard>
-                        <HoverCardTrigger>
-                          <InfoIcon className="h-4 w-4 text-muted-foreground" />
-                        </HoverCardTrigger>
-                        <HoverCardContent className="w-80">
-                          <div className="space-y-2">
-                            <h4 className="font-medium">Tipos de Investigador</h4>
-                            <div className="text-sm space-y-2">
-                              <p>
-                                <strong>Investigador Primario:</strong> Realiza presentaciones 
-                                semanales y participa activamente en las sesiones de revisión.
-                              </p>
-                              <p>
-                                <strong>Investigador Contribuidor:</strong> Aporta documentación 
-                                a la plataforma sin compromiso de presentaciones.
-                              </p>
-                            </div>
-                          </div>
-                        </HoverCardContent>
-                      </HoverCard>
-                    </div>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex flex-col space-y-1"
-                      >
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="primary" />
-                          </FormControl>
-                          <FormLabel className="font-normal">
-                            Investigador Primario
-                          </FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="contributor" />
-                          </FormControl>
-                          <FormLabel className="font-normal">
-                            Investigador Contribuidor
-                          </FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="agent"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Selecciona un Agente de Investigación</FormLabel>
-                    <FormControl>
-                      <AgentSearch 
-                        key={refreshAgentKey}
-                        onSelect={field.onChange} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base">Nombre Completo</FormLabel>
-                    <FormDescription>
-                      Nombre registrado en el sistema
-                    </FormDescription>
-                    <FormControl>
-                      <Input 
-                        className="text-base px-4 py-2 bg-muted"
-                        placeholder="Ej: Juan Pérez" 
-                        readOnly
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base">Correo Electrónico</FormLabel>
-                    <FormDescription>
-                      Correo registrado en el sistema
-                    </FormDescription>
-                    <FormControl>
-                      <Input 
-                        className="text-base px-4 py-2 bg-muted"
-                        type="email"
-                        placeholder="correo@ejemplo.com"
-                        readOnly
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base">Teléfono</FormLabel>
-                    <FormDescription>
-                      Formato: +57 300 123 4567
-                    </FormDescription>
-                    <FormControl>
-                      <Input 
-                        className="text-base px-4 py-2"
-                        type="tel"
-                        placeholder="+573001234567"
-                        {...field}
-                        onChange={(e) => {
-                          // Permitir solo números y el signo +
-                          const value = e.target.value.replace(/[^\d+]/g, '')
-                          field.onChange(value)
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="github_username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base">Usuario de GitHub</FormLabel>
-                    <FormDescription>
-                      Tu nombre de usuario en GitHub
-                    </FormDescription>
-                    <FormControl>
-                      <Input 
-                        className="text-base px-4 py-2"
-                        placeholder="usuario-github"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="linkedin_profile"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base">Perfil de LinkedIn</FormLabel>
-                    <FormDescription>
-                      URL de tu perfil de LinkedIn
-                    </FormDescription>
-                    <FormControl>
-                      <Input 
-                        className="text-base px-4 py-2"
-                        placeholder="https://linkedin.com/in/tu-perfil"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button 
-                type="submit" 
-                className="w-full"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}
-              </Button>
-            </form>
-          </Form>
+            <h2 className="text-xl font-semibold text-red-600">Error</h2>
+            <p className="text-muted-foreground">{error}</p>
+            <Button
+              variant="outline"
+              onClick={() => window.location.reload()}
+              className="mt-4"
+            >
+              Intentar nuevamente
+            </Button>
+          </div>
         </CardContent>
       </Card>
-      {renderSuccessDialog()}
-    </>
+    );
+  }
+
+  if (existingResearcher) {
+    return (
+      <Card className="mt-4">
+        <CardContent className="p-6">
+          <div className="space-y-6">
+            <div className="flex items-center space-x-4">
+              <div className="relative h-16 w-16">
+                <img
+                  src={existingResearcher.avatarUrl}
+                  alt={existingResearcher.name}
+                  className="rounded-full object-cover"
+                />
+                <div className="absolute bottom-0 right-0 h-4 w-4 rounded-full bg-green-500 border-2 border-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">{existingResearcher.name}</h2>
+                <p className="text-muted-foreground">{existingResearcher.currentRol || 'Investigador'}</p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <h3 className="font-medium">Información de Contacto</h3>
+                <div className="text-sm text-muted-foreground space-y-1">
+                  <p>Email: {existingResearcher.email}</p>
+                  <p>Teléfono: {existingResearcher.phone}</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-medium">Perfiles</h3>
+                <div className="flex space-x-4">
+                  <a
+                    href={`https://github.com/${existingResearcher.githubUsername}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-primary"
+                  >
+                    <Github className="h-5 w-5" />
+                  </a>
+                  {existingResearcher.linkedinProfile && (
+                    <a
+                      href={existingResearcher.linkedinProfile}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary"
+                    >
+                      <Linkedin className="h-5 w-5" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <Separator className="my-4" />
+
+            <div className="space-y-4">
+              <h3 className="font-medium">Acciones Rápidas</h3>
+              <div className="grid gap-4 md:grid-cols-2">
+
+
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => router.push('/dashboard/documentation/mis-investigaciones')}
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Ver mis investigaciones
+                </Button>
+
+
+                <SelectAgentModal
+                  email={profile?.email || ""}
+                  onSuccess={() => {
+                    // Recargar los datos del investigador
+                    if (profile?.email) {
+                      loadResearcherDetails()
+                    }
+                  }}
+                  refreshAgentKey={refreshAgentKey}
+                />
+
+                <EditProfileModal 
+                  email={profile?.email || ""}
+                  initialData={{
+                    currentRole: existingResearcher.currentRol || "",
+                    githubUsername: existingResearcher.githubUsername || "",
+                    linkedinProfile: existingResearcher.linkedinProfile || "",
+                  }}
+                  onSuccess={() => {
+                    if (profile?.email) {
+                      loadResearcherDetails()
+                    }
+                  }}
+                />
+
+                <Button
+                  variant="outline"
+                  onClick={() => router.push('/dashboard/centro-investigacion/guias/')}
+                  className="w-full"
+                >
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  Recursos de investigación
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-6 text-sm text-center text-muted-foreground">
+              <p>
+                Miembro desde {new Date(existingResearcher.createdAt).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Si no existe el investigador, mostrar el formulario de registro
+  return (
+    <NewResearcherForm 
+      onSuccess={(data) => {
+        setSuccessData(data)
+        setShowSuccessModal(true)
+      }}
+      initialData={{
+        name: profile?.name || "",
+        email: profile?.email || "",
+      }}
+    />
   )
 }

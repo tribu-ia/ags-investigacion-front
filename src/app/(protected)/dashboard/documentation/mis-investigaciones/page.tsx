@@ -17,13 +17,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Calendar, Trophy, Lightbulb, Target } from "lucide-react";
 import { useChallengeStatus } from '@/contexts/challenge-status-context';
 import { DetailPresentation } from "@/components/ui/custom/detail-presentation";
 import { ResearcherInvestigations } from "@/components/ui/custom/researcher-investigations";
