@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -27,6 +27,7 @@ import { AgentSearch } from "./agent-search"
 import { useApi } from "@/hooks/use-api"
 import { toast } from "sonner"
 import { SuccessResponse } from "@/types/researcher"
+import { AgentAssignmentSuccessDialog } from "./agent-assignment-success-dialog"
 
 const formSchema = z.object({
   agent: z.string({
@@ -69,7 +70,8 @@ interface NewResearcherFormProps {
 export function NewResearcherForm({ onSuccess, initialData }: NewResearcherFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [refreshAgentKey, setRefreshAgentKey] = useState(0)
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false)
+  const [successData, setSuccessData] = useState<SuccessResponse | null>(null)
   const api = useApi()
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -95,6 +97,9 @@ export function NewResearcherForm({ onSuccess, initialData }: NewResearcherFormP
         '/researchers-managements/researchers', 
         values
       )
+      setSuccessData(data)
+      setShowSuccessDialog(true)
+      form.reset()
       onSuccess(data)
     } catch (error: any) {
       console.error('Error submitting form:', error)
@@ -104,237 +109,258 @@ export function NewResearcherForm({ onSuccess, initialData }: NewResearcherFormP
     }
   }
 
+  const handleSuccessDialogClose = () => {
+    setShowSuccessDialog(false)
+    setSuccessData(null)
+  }
+
+  useEffect(() => {
+    return () => {
+      setShowSuccessDialog(false)
+      setSuccessData(null)
+    }
+  }, [])
+
   return (
-    <Card className="mt-4">
-      <CardContent className="p-6">
-        {errorMessage && (
-          <div className="mb-4 p-4 border border-red-400 bg-red-50 text-red-700 rounded-md flex items-center gap-2">
-            <InfoIcon className="h-5 w-5 flex-shrink-0" />
-            <span className="flex-1">{errorMessage}</span>
-          </div>
-        )}
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="researcher_type"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <FormLabel className="text-base">Tipo de Investigador</FormLabel>
-                    <HoverCard>
-                      <HoverCardTrigger>
-                        <InfoIcon className="h-4 w-4 text-muted-foreground" />
-                      </HoverCardTrigger>
-                      <HoverCardContent className="w-80">
-                        <div className="space-y-2">
-                          <h4 className="font-medium">Tipos de Investigador</h4>
-                          <div className="text-sm space-y-2">
-                            <p>
-                              <strong>Investigador Primario:</strong> Realiza presentaciones
-                              semanales y participa activamente en las sesiones de revisión.
-                            </p>
-                            <p>
-                              <strong>Investigador Contribuidor:</strong> Aporta documentación
-                              a la plataforma sin compromiso de presentaciones.
-                            </p>
+    <>
+      <Card className="mt-4">
+        <CardContent className="p-6">
+          {errorMessage && (
+            <div className="mb-4 p-4 border border-red-400 bg-red-50 text-red-700 rounded-md flex items-center gap-2">
+              <InfoIcon className="h-5 w-5 flex-shrink-0" />
+              <span className="flex-1">{errorMessage}</span>
+            </div>
+          )}
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="researcher_type"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <FormLabel className="text-base">Tipo de Investigador</FormLabel>
+                      <HoverCard>
+                        <HoverCardTrigger>
+                          <InfoIcon className="h-4 w-4 text-muted-foreground" />
+                        </HoverCardTrigger>
+                        <HoverCardContent className="w-80">
+                          <div className="space-y-2">
+                            <h4 className="font-medium">Tipos de Investigador</h4>
+                            <div className="text-sm space-y-2">
+                              <p>
+                                <strong>Investigador Primario:</strong> Realiza presentaciones
+                                semanales y participa activamente en las sesiones de revisión.
+                              </p>
+                              <p>
+                                <strong>Investigador Contribuidor:</strong> Aporta documentación
+                                a la plataforma sin compromiso de presentaciones.
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </HoverCardContent>
-                    </HoverCard>
-                  </div>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex flex-col space-y-1"
-                    >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="primary" />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          Investigador Primario
-                        </FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="contributor" />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          Investigador Contribuidor
-                        </FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                        </HoverCardContent>
+                      </HoverCard>
+                    </div>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="primary" />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            Investigador Primario
+                          </FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="contributor" />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            Investigador Contribuidor
+                          </FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="agent"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Selecciona un Agente de Investigación</FormLabel>
-                  <FormControl>
-                    <AgentSearch
-                      key={refreshAgentKey}
-                      onSelect={field.onChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="agent"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Selecciona un Agente de Investigación</FormLabel>
+                    <FormControl>
+                      <AgentSearch
+                        onSelect={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base">Nombre Completo</FormLabel>
-                  <FormDescription>
-                    Nombre registrado en el sistema
-                  </FormDescription>
-                  <FormControl>
-                    <Input
-                      className="text-base px-4 py-2 bg-muted"
-                      placeholder="Ej: Juan Pérez"
-                      readOnly
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base">Nombre Completo</FormLabel>
+                    <FormDescription>
+                      Nombre registrado en el sistema
+                    </FormDescription>
+                    <FormControl>
+                      <Input
+                        className="text-base px-4 py-2 bg-muted"
+                        placeholder="Ej: Juan Pérez"
+                        readOnly
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base">Correo Electrónico</FormLabel>
-                  <FormDescription>
-                    Correo registrado en el sistema
-                  </FormDescription>
-                  <FormControl>
-                    <Input
-                      className="text-base px-4 py-2 bg-muted"
-                      type="email"
-                      placeholder="correo@ejemplo.com"
-                      readOnly
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base">Correo Electrónico</FormLabel>
+                    <FormDescription>
+                      Correo registrado en el sistema
+                    </FormDescription>
+                    <FormControl>
+                      <Input
+                        className="text-base px-4 py-2 bg-muted"
+                        type="email"
+                        placeholder="correo@ejemplo.com"
+                        readOnly
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base">Teléfono</FormLabel>
-                  <FormDescription>
-                    Formato: +57 300 123 4567
-                  </FormDescription>
-                  <FormControl>
-                    <Input
-                      className="text-base px-4 py-2"
-                      type="tel"
-                      placeholder="+573001234567"
-                      {...field}
-                      onChange={(e) => {
-                        // Permitir solo números y el signo +
-                        const value = e.target.value.replace(/[^\d+]/g, '')
-                        field.onChange(value)
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base">Teléfono</FormLabel>
+                    <FormDescription>
+                      Formato: +57 300 123 4567
+                    </FormDescription>
+                    <FormControl>
+                      <Input
+                        className="text-base px-4 py-2"
+                        type="tel"
+                        placeholder="+573001234567"
+                        {...field}
+                        onChange={(e) => {
+                          // Permitir solo números y el signo +
+                          const value = e.target.value.replace(/[^\d+]/g, '')
+                          field.onChange(value)
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="github_username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base">Usuario de GitHub</FormLabel>
-                  <FormDescription>
-                    Tu nombre de usuario en GitHub
-                  </FormDescription>
-                  <FormControl>
-                    <Input
-                      className="text-base px-4 py-2"
-                      placeholder="usuario-github"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="github_username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base">Usuario de GitHub</FormLabel>
+                    <FormDescription>
+                      Tu nombre de usuario en GitHub
+                    </FormDescription>
+                    <FormControl>
+                      <Input
+                        className="text-base px-4 py-2"
+                        placeholder="usuario-github"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="linkedin_profile"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base">Perfil de LinkedIn</FormLabel>
-                  <FormDescription>
-                    URL de tu perfil de LinkedIn
-                  </FormDescription>
-                  <FormControl>
-                    <Input
-                      className="text-base px-4 py-2"
-                      placeholder="https://linkedin.com/in/tu-perfil"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="linkedin_profile"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base">Perfil de LinkedIn</FormLabel>
+                    <FormDescription>
+                      URL de tu perfil de LinkedIn
+                    </FormDescription>
+                    <FormControl>
+                      <Input
+                        className="text-base px-4 py-2"
+                        placeholder="https://linkedin.com/in/tu-perfil"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="current_role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base">Rol Actual</FormLabel>
-                  <FormDescription>
-                    Tu rol o cargo actual en la empresa
-                  </FormDescription>
-                  <FormControl>
-                    <Input
-                      className="text-base px-4 py-2"
-                      placeholder="Ej: IA Engineer, Data Scientist, Full Stack Developer, etc."
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="current_role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base">Rol Actual</FormLabel>
+                    <FormDescription>
+                      Tu rol o cargo actual en la empresa
+                    </FormDescription>
+                    <FormControl>
+                      <Input
+                        className="text-base px-4 py-2"
+                        placeholder="Ej: IA Engineer, Data Scientist, Full Stack Developer, etc."
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+
+      {successData && (
+        <AgentAssignmentSuccessDialog
+          isOpen={showSuccessDialog}
+          onOpenChange={handleSuccessDialogClose}
+          successData={successData}
+        />
+      )}
+    </>
   )
 } 

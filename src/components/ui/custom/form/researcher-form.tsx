@@ -21,6 +21,7 @@ import { toast } from "sonner"
 import { SelectAgentModal } from "./select-agent-modal"
 import { EditProfileModal } from "./edit-profile-modal"
 import { NewResearcherForm } from "./new-researcher-form"
+import { SuccessResponse } from "@/types/researcher"
 
 
 type ApiResponse = {
@@ -31,25 +32,6 @@ type ApiResponse = {
     message: string;
     error_type: string;
   }
-}
-
-type SuccessResponse = {
-  success: boolean;
-  message: string;
-  data: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    githubUsername: string;
-    avatarUrl: string;
-    repositoryUrl: string;
-    linkedinProfile: string | null;
-    agentId: string;
-    status: string;
-  };
-  researcher_type: "primary" | "contributor";
-  presentationDateTime: string | null;
 }
 
 // Definir tipos
@@ -237,11 +219,8 @@ export function ResearcherForm() {
     );
   };
 
-  const handleSuccess = async (data: SuccessResponse) => {
-    setSuccessData(data)
-    setShowSuccessModal(true)
-    // Recargar los datos del investigador después de un registro exitoso
-    await loadResearcherDetails()
+  const handleSuccess = (data: SuccessResponse) => {
+    setRefreshAgentKey(prev => prev + 1)
   }
 
   if (isLoading) {
@@ -385,7 +364,6 @@ export function ResearcherForm() {
           email: profile?.email || "",
         }}
       />
-      {showSuccessModal && renderSuccessDialog()}
     </>
   )
 }
