@@ -67,20 +67,7 @@ export function SelectAgentModal({ email, onSuccess, refreshAgentKey }: SelectAg
     }
 
     return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-                <Button
-                    variant="outline"
-                    className="w-full"
-                >
-                    <Settings className="mr-2 h-4 w-4" />
-                    Investigar Nuevo Agente
-                </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Seleccionar Nuevo Agente</DialogTitle>
-                </DialogHeader>
+
                 <div className="space-y-6">
                     <div className="space-y-3">
                         <div className="flex items-center gap-2">
@@ -142,7 +129,6 @@ export function SelectAgentModal({ email, onSuccess, refreshAgentKey }: SelectAg
                         {isSaving ? "Asignando agente..." : "Asignar Agente"}
                     </Button>
                 </div>
-            </DialogContent>
-        </Dialog>
+  
     )
 } 

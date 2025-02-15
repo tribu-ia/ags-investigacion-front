@@ -54,11 +54,11 @@ export function EditProfileModal({ email, initialData, onSuccess }: EditProfileM
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
-          variant="outline"
-          className="w-full"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 hover:bg-muted/50 transition-colors"
         >
-          <Settings className="mr-2 h-4 w-4" />
-          Editar perfil
+          <Settings className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent>

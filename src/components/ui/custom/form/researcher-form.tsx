@@ -140,6 +140,7 @@ export function ResearcherForm() {
   const [isSelectingAgent, setIsSelectingAgent] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState("");
   const [researcherType, setResearcherType] = useState<"primary" | "contributor">("contributor");
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -152,37 +153,32 @@ export function ResearcherForm() {
     }
   }, [profile, form])
 
+  const loadResearcherDetails = async () => {
+    if (!profile?.email) {
+      setError("No se encontró información del usuario. Por favor, inicia sesión nuevamente.");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { data } = await api.get<Researcher>(`/researchers-managements/researchers?email=${profile.email}`);
+      setExistingResearcher(data);
+      setError(null);
+    } catch (error: any) {
+      if (error.response?.status !== 404) {
+        console.error('Error checking researcher:', error);
+        setError("Error al verificar el estado del investigador. Por favor, intenta nuevamente.");
+      } else {
+        setExistingResearcher(null);
+        setError(null);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const checkExistingResearcher = async () => {
-      if (!profile?.email) {
-        setError("No se encontró información del usuario. Por favor, inicia sesión nuevamente.");
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const response = await api.get<Researcher>(`/researchers-managements/researchers?email=${profile.email}`);
-
-        if (response && response.data) {
-          setExistingResearcher(response.data);
-          setError(null);
-        } else {
-          setExistingResearcher(null);
-        }
-      } catch (error: any) {
-        if (error.response?.status !== 404) {
-          console.error('Error checking researcher:', error);
-          setError("Error al verificar el estado del investigador. Por favor, intenta nuevamente.");
-        } else {
-          setExistingResearcher(null);
-          setError(null);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkExistingResearcher();
+    loadResearcherDetails();
   }, [profile?.email]);
 
   useEffect(() => {
@@ -194,7 +190,6 @@ export function ResearcherForm() {
       });
     }
   }, [existingResearcher]);
-
 
   const formatDateTime = (dateTimeStr: string) => {
     const date = new Date(dateTimeStr)
@@ -359,9 +354,11 @@ export function ResearcherForm() {
     }
   };
 
-  const handleSuccess = (data: SuccessResponse) => {
+  const handleSuccess = async (data: SuccessResponse) => {
     setSuccessData(data)
     setShowSuccessModal(true)
+    // Recargar los datos del investigador después de un registro exitoso
+    await loadResearcherDetails()
   }
 
   if (isLoading) {
@@ -387,7 +384,7 @@ export function ResearcherForm() {
             <p className="text-muted-foreground">{error}</p>
             <Button
               variant="outline"
-              onClick={() => window.location.reload()}
+              onClick={loadResearcherDetails}
               className="mt-4"
             >
               Intentar nuevamente
@@ -412,8 +409,25 @@ export function ResearcherForm() {
                 />
                 <div className="absolute bottom-0 right-0 h-4 w-4 rounded-full bg-green-500 border-2 border-white" />
               </div>
-              <div>
-                <h2 className="text-2xl font-bold">{existingResearcher.name}</h2>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold">{existingResearcher.name}</h2>
+                  <EditProfileModal 
+                    open={isEditProfileOpen}
+                    onOpenChange={setIsEditProfileOpen}
+                    email={profile?.email || ""}
+                    initialData={{
+                      currentRole: existingResearcher.currentRol || "",
+                      githubUsername: existingResearcher.githubUsername || "",
+                      linkedinProfile: existingResearcher.linkedinProfile || "",
+                    }}
+                    onSuccess={() => {
+                      if (profile?.email) {
+                        loadResearcherDetails()
+                      }
+                    }}
+                  />
+                </div>
                 <p className="text-muted-foreground">{existingResearcher.currentRol || 'Investigador'}</p>
               </div>
             </div>
@@ -451,60 +465,28 @@ export function ResearcherForm() {
               </div>
             </div>
 
-            <Separator className="my-4" />
+            <Separator className="my-6" />
 
-            <div className="space-y-4">
-              <h3 className="font-medium">Acciones Rápidas</h3>
-              <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col space-y-4">
 
-
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => router.push('/dashboard/documentation/mis-investigaciones')}
-                >
-                  <Settings className="mr-2 h-4 w-4" />
-                  Ver mis investigaciones
-                </Button>
-
-
-                <SelectAgentModal 
+              <div className="flex items-center justify-center">
+                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  Miembro desde {new Date(existingResearcher.createdAt).toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </p>
+              </div>
+            </div>
+          </div>
+          <SelectAgentModal 
                   email={profile?.email || ""}
                   onSuccess={handleSuccess}
                   refreshAgentKey={refreshAgentKey}
                 />
-
-                <EditProfileModal 
-                  email={profile?.email || ""}
-                  initialData={{
-                    currentRole: existingResearcher.currentRol || "",
-                    githubUsername: existingResearcher.githubUsername || "",
-                    linkedinProfile: existingResearcher.linkedinProfile || "",
-                  }}
-                  onSuccess={() => {
-                    if (profile?.email) {
-                      loadResearcherDetails()
-                    }
-                  }}
-                />
-
-                <Button
-                  variant="outline"
-                  onClick={() => router.push('/dashboard/centro-investigacion/guias/')}
-                  className="w-full"
-                >
-                  <BookOpen className="mr-2 h-4 w-4" />
-                  Recursos de investigación
-                </Button>
-              </div>
-            </div>
-
-            <div className="mt-6 text-sm text-center text-muted-foreground">
-              <p>
-                Miembro desde {new Date(existingResearcher.createdAt).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
+         
         </CardContent>
       </Card>
     );
@@ -520,7 +502,7 @@ export function ResearcherForm() {
           email: profile?.email || "",
         }}
       />
-      {renderSuccessDialog()}
+      {showSuccessModal && renderSuccessDialog()}
     </>
   )
 }
