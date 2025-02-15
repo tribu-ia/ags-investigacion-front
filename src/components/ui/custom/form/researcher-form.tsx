@@ -1,23 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
 import Image from "next/image"
-import { AgentSearch } from "@/components/ui/custom/form/agent-search"
 import { useAuth } from "@/hooks/use-auth"
 import { useApi } from "@/hooks/use-api"
 import {
@@ -28,13 +14,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Calendar, Clock, Github, Linkedin, Discord, XCircle, PlusCircle, Settings, BookOpen } from "lucide-react"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card"
-import { InfoIcon } from "lucide-react"
 import { useRouter } from 'next/navigation'
 import { Separator } from "@/components/ui/separator"
 import Loader from "@/components/ui/custom/shared/loader";
@@ -43,31 +22,6 @@ import { SelectAgentModal } from "./select-agent-modal"
 import { EditProfileModal } from "./edit-profile-modal"
 import { NewResearcherForm } from "./new-researcher-form"
 
-const formSchema = z.object({
-  agent: z.string({
-    required_error: "Por favor selecciona un agente",
-  }).min(1, "Por favor selecciona un agente"),
-  researcher_type: z.enum(["primary", "contributor"], {
-    required_error: "Por favor selecciona un tipo de investigador",
-  }),
-  name: z.string({
-    required_error: "El nombre es obligatorio",
-  }).min(2, "El nombre debe tener al menos 2 caracteres")
-    .max(100, "El nombre no puede exceder los 100 caracteres"),
-  email: z.string({
-    required_error: "El correo electrónico es obligatorio",
-  }).email("Por favor ingresa un correo electrónico válido"),
-  phone: z.string({
-    required_error: "El teléfono es obligatorio",
-  }).regex(/^\+?[0-9]{10,15}$/, "Por favor ingresa un número de teléfono válido (10-15 dígitos, puede incluir + al inicio)"),
-  github_username: z.string({
-    required_error: "El usuario de GitHub es obligatorio",
-  }).min(1, "Por favor ingresa tu usuario de GitHub"),
-  linkedin_profile: z.string({
-    required_error: "El perfil de LinkedIn es obligatorio",
-  }).min(1, "Por favor ingresa tu perfil de LinkedIn")
-    .url("Por favor ingresa una URL válida de LinkedIn"),
-})
 
 type ApiResponse = {
   status: string;
@@ -120,9 +74,7 @@ type ResearcherUpdate = {
 
 export function ResearcherForm() {
   const [showSuccessModal, setShowSuccessModal] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [refreshAgentKey, setRefreshAgentKey] = useState(0)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successData, setSuccessData] = useState<SuccessResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [existingResearcher, setExistingResearcher] = useState<Researcher | null>(null)
@@ -130,28 +82,16 @@ export function ResearcherForm() {
   const { profile } = useAuth()
   const api = useApi()
   const router = useRouter()
-  const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+
   const [updateForm, setUpdateForm] = useState<ResearcherUpdate>({
     currentRole: "",
     githubUsername: "",
     linkedinProfile: "",
   });
-  const [isSelectingAgent, setIsSelectingAgent] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState("");
-  const [researcherType, setResearcherType] = useState<"primary" | "contributor">("contributor");
+
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false)
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-  })
 
-  useEffect(() => {
-    if (profile) {
-      form.setValue("name", profile.name || profile.preferred_username || "")
-      form.setValue("email", profile.email || "")
-    }
-  }, [profile, form])
 
   const loadResearcherDetails = async () => {
     if (!profile?.email) {
@@ -295,63 +235,6 @@ export function ResearcherForm() {
         </DialogContent>
       </Dialog>
     );
-  };
-
-  const handleUpdateProfile = async () => {
-    setIsSaving(true);
-    try {
-      if (!profile?.email) {
-        throw new Error('No email found');
-      }
-
-      await api.put(
-        `/researchers-managements/researchers/${profile.email}/profile`,
-        updateForm
-      );
-
-      // Recargar los datos del investigador
-      const { data } = await api.get<Researcher>(`/researchers-managements/researchers?email=${profile.email}`);
-      setExistingResearcher(data);
-
-      setIsEditing(false);
-      toast.success("Perfil actualizado correctamente");
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      toast.error("Error al actualizar el perfil");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleNewAgentSubmit = async () => {
-    setIsSaving(true);
-    try {
-      if (!profile?.email || !selectedAgent) {
-        throw new Error('Información incompleta');
-      }
-
-      const payload = {
-        email: profile.email,
-        agent: selectedAgent,
-        researcher_type: researcherType
-      };
-
-      await api.post('/researchers-managements/researchers/assign-agent', payload);
-
-      // Recargar los datos del investigador
-      const { data } = await api.get<Researcher>(`/researchers-managements/researchers?email=${profile.email}`);
-      setExistingResearcher(data);
-
-      setIsSelectingAgent(false);
-      toast.success("Agente asignado correctamente");
-      setSelectedAgent("");
-      setResearcherType("contributor");
-    } catch (error) {
-      console.error('Error assigning agent:', error);
-      toast.error("Error al asignar el agente");
-    } finally {
-      setIsSaving(false);
-    }
   };
 
   const handleSuccess = async (data: SuccessResponse) => {
