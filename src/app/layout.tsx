@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
+import { cn } from "@/lib/utils";
+import { Toaster } from "sonner";
 
 const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  display: 'swap',
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -20,7 +22,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={spaceGrotesk.className}>
+      <body
+        className={cn(
+          "min-h-svh bg-background antialiased",
+          spaceGrotesk.className
+        )}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
@@ -28,6 +35,7 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
+        <Toaster />
       </body>
     </html>
   );
