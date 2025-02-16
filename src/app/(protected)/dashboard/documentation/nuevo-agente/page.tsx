@@ -15,20 +15,9 @@ export default function NuevoAgentePage() {
         </p>
       </div>
       <div className="grid gap-6">
-        <Tabs defaultValue="researcher" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="researcher">Investigador</TabsTrigger>
-            <TabsTrigger value="learner">Aprendiz</TabsTrigger>
-          </TabsList>
-          <TabsContent value="researcher">
+
             <ResearcherForm />
-          </TabsContent>
-          <TabsContent value="learner">
-            <Card className="mt-4">
-              <LearnerForm />
-            </Card>
-          </TabsContent>
-        </Tabs>
+
       </div>
     </div>
   );
