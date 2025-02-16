@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -14,50 +14,66 @@ import {
   FormLabel,
   FormMessage,
   FormDescription,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from "@/components/ui/hover-card"
-import { InfoIcon } from "lucide-react"
-import { AgentSearch } from "./agent-search"
-import { useApi } from "@/hooks/use-api"
-import { toast } from "sonner"
-import { SuccessResponse } from "@/types/researcher"
-import { AgentAssignmentSuccessDialog } from "./agent-assignment-success-dialog"
+} from "@/components/ui/hover-card";
+import { InfoIcon } from "lucide-react";
+import { AgentSearch } from "@/components/ui/custom/form/agent-search";
+import { useApi } from "@/hooks/use-api";
+import { SuccessResponse } from "@/types/researcher";
+import { AgentAssignmentSuccessDialog } from "@/components/ui/custom/form/agent-assignment-success-dialog";
 
 const formSchema = z.object({
-  agent: z.string({
-    required_error: "Por favor selecciona un agente",
-  }).min(1, "Por favor selecciona un agente"),
+  agent: z
+    .string({
+      required_error: "Por favor selecciona un agente",
+    })
+    .min(1, "Por favor selecciona un agente"),
   researcher_type: z.enum(["primary", "contributor"], {
     required_error: "Por favor selecciona un tipo de investigador",
   }),
-  name: z.string({
-    required_error: "El nombre es obligatorio",
-  }).min(2, "El nombre debe tener al menos 2 caracteres")
+  name: z
+    .string({
+      required_error: "El nombre es obligatorio",
+    })
+    .min(2, "El nombre debe tener al menos 2 caracteres")
     .max(100, "El nombre no puede exceder los 100 caracteres"),
-  email: z.string({
-    required_error: "El correo electrónico es obligatorio",
-  }).email("Por favor ingresa un correo electrónico válido"),
-  phone: z.string({
-    required_error: "El teléfono es obligatorio",
-  }).regex(/^\+?[0-9]{10,15}$/, "Por favor ingresa un número de teléfono válido (10-15 dígitos, puede incluir + al inicio)"),
-  github_username: z.string({
-    required_error: "El usuario de GitHub es obligatorio",
-  }).min(1, "Por favor ingresa tu usuario de GitHub"),
-  linkedin_profile: z.string({
-    required_error: "El perfil de LinkedIn es obligatorio",
-  }).min(1, "Por favor ingresa tu perfil de LinkedIn")
+  email: z
+    .string({
+      required_error: "El correo electrónico es obligatorio",
+    })
+    .email("Por favor ingresa un correo electrónico válido"),
+  phone: z
+    .string({
+      required_error: "El teléfono es obligatorio",
+    })
+    .regex(
+      /^\+?[0-9]{10,15}$/,
+      "Por favor ingresa un número de teléfono válido (10-15 dígitos, puede incluir + al inicio)"
+    ),
+  github_username: z
+    .string({
+      required_error: "El usuario de GitHub es obligatorio",
+    })
+    .min(1, "Por favor ingresa tu usuario de GitHub"),
+  linkedin_profile: z
+    .string({
+      required_error: "El perfil de LinkedIn es obligatorio",
+    })
+    .min(1, "Por favor ingresa tu perfil de LinkedIn")
     .url("Por favor ingresa una URL válida de LinkedIn"),
-  current_role: z.string({
-    required_error: "El rol actual es obligatorio",
-  }).min(2, "Por favor ingresa tu rol actual")
+  current_role: z
+    .string({
+      required_error: "El rol actual es obligatorio",
+    })
+    .min(2, "Por favor ingresa tu rol actual")
     .max(100, "El rol no puede exceder los 100 caracteres"),
-})
+});
 
 interface NewResearcherFormProps {
   onSuccess: (data: SuccessResponse) => void;
@@ -67,12 +83,15 @@ interface NewResearcherFormProps {
   };
 }
 
-export function NewResearcherForm({ onSuccess, initialData }: NewResearcherFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false)
-  const [successData, setSuccessData] = useState<SuccessResponse | null>(null)
-  const api = useApi()
+export function NewResearcherForm({
+  onSuccess,
+  initialData,
+}: NewResearcherFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [successData, setSuccessData] = useState<SuccessResponse | null>(null);
+  const api = useApi();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -86,40 +105,42 @@ export function NewResearcherForm({ onSuccess, initialData }: NewResearcherFormP
       agent: "",
       current_role: "",
     },
-  })
+  });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsSubmitting(true)
-    setErrorMessage(null)
-    
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
     try {
       const { data } = await api.post<SuccessResponse>(
-        '/researchers-managements/researchers', 
+        "/researchers-managements/researchers",
         values
-      )
-      setSuccessData(data)
-      setShowSuccessDialog(true)
-      form.reset()
-      onSuccess(data)
+      );
+      setSuccessData(data);
+      setShowSuccessDialog(true);
+      form.reset();
+      onSuccess(data);
     } catch (error: any) {
-      console.error('Error submitting form:', error)
-      setErrorMessage(error.response?.data?.message || "Error al enviar el formulario")
+      console.error("Error submitting form:", error);
+      setErrorMessage(
+        error.response?.data?.message || "Error al enviar el formulario"
+      );
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleSuccessDialogClose = () => {
-    setShowSuccessDialog(false)
-    setSuccessData(null)
-  }
+    setShowSuccessDialog(false);
+    setSuccessData(null);
+  };
 
   useEffect(() => {
     return () => {
-      setShowSuccessDialog(false)
-      setSuccessData(null)
-    }
-  }, [])
+      setShowSuccessDialog(false);
+      setSuccessData(null);
+    };
+  }, []);
 
   return (
     <>
@@ -131,7 +152,7 @@ export function NewResearcherForm({ onSuccess, initialData }: NewResearcherFormP
               <span className="flex-1">{errorMessage}</span>
             </div>
           )}
-          
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
@@ -140,22 +161,28 @@ export function NewResearcherForm({ onSuccess, initialData }: NewResearcherFormP
                 render={({ field }) => (
                   <FormItem className="space-y-3">
                     <div className="flex items-center gap-2">
-                      <FormLabel className="text-base">Tipo de Investigador</FormLabel>
+                      <FormLabel className="text-base">
+                        Tipo de Investigador
+                      </FormLabel>
                       <HoverCard>
                         <HoverCardTrigger>
                           <InfoIcon className="h-4 w-4 text-muted-foreground" />
                         </HoverCardTrigger>
                         <HoverCardContent className="w-80">
                           <div className="space-y-2">
-                            <h4 className="font-medium">Tipos de Investigador</h4>
+                            <h4 className="font-medium">
+                              Tipos de Investigador
+                            </h4>
                             <div className="text-sm space-y-2">
                               <p>
-                                <strong>Investigador Primario:</strong> Realiza presentaciones
-                                semanales y participa activamente en las sesiones de revisión.
+                                <strong>Investigador Primario:</strong> Realiza
+                                presentaciones semanales y participa activamente
+                                en las sesiones de revisión.
                               </p>
                               <p>
-                                <strong>Investigador Contribuidor:</strong> Aporta documentación
-                                a la plataforma sin compromiso de presentaciones.
+                                <strong>Investigador Contribuidor:</strong>{" "}
+                                Aporta documentación a la plataforma sin
+                                compromiso de presentaciones.
                               </p>
                             </div>
                           </div>
@@ -198,9 +225,7 @@ export function NewResearcherForm({ onSuccess, initialData }: NewResearcherFormP
                   <FormItem>
                     <FormLabel>Selecciona un Agente de Investigación</FormLabel>
                     <FormControl>
-                      <AgentSearch
-                        onSelect={field.onChange}
-                      />
+                      <AgentSearch onSelect={field.onChange} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -234,7 +259,9 @@ export function NewResearcherForm({ onSuccess, initialData }: NewResearcherFormP
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base">Correo Electrónico</FormLabel>
+                    <FormLabel className="text-base">
+                      Correo Electrónico
+                    </FormLabel>
                     <FormDescription>
                       Correo registrado en el sistema
                     </FormDescription>
@@ -258,9 +285,7 @@ export function NewResearcherForm({ onSuccess, initialData }: NewResearcherFormP
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-base">Teléfono</FormLabel>
-                    <FormDescription>
-                      Formato: +57 300 123 4567
-                    </FormDescription>
+                    <FormDescription>Formato: +57 300 123 4567</FormDescription>
                     <FormControl>
                       <Input
                         className="text-base px-4 py-2"
@@ -269,8 +294,8 @@ export function NewResearcherForm({ onSuccess, initialData }: NewResearcherFormP
                         {...field}
                         onChange={(e) => {
                           // Permitir solo números y el signo +
-                          const value = e.target.value.replace(/[^\d+]/g, '')
-                          field.onChange(value)
+                          const value = e.target.value.replace(/[^\d+]/g, "");
+                          field.onChange(value);
                         }}
                       />
                     </FormControl>
@@ -284,7 +309,9 @@ export function NewResearcherForm({ onSuccess, initialData }: NewResearcherFormP
                 name="github_username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base">Usuario de GitHub</FormLabel>
+                    <FormLabel className="text-base">
+                      Usuario de GitHub
+                    </FormLabel>
                     <FormDescription>
                       Tu nombre de usuario en GitHub
                     </FormDescription>
@@ -305,7 +332,9 @@ export function NewResearcherForm({ onSuccess, initialData }: NewResearcherFormP
                 name="linkedin_profile"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base">Perfil de LinkedIn</FormLabel>
+                    <FormLabel className="text-base">
+                      Perfil de LinkedIn
+                    </FormLabel>
                     <FormDescription>
                       URL de tu perfil de LinkedIn
                     </FormDescription>
@@ -342,12 +371,8 @@ export function NewResearcherForm({ onSuccess, initialData }: NewResearcherFormP
                 )}
               />
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Enviando..." : "Enviar Solicitud"}
               </Button>
             </form>
           </Form>
@@ -362,5 +387,5 @@ export function NewResearcherForm({ onSuccess, initialData }: NewResearcherFormP
         />
       )}
     </>
-  )
-} 
+  );
+}
