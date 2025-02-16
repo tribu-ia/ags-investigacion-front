@@ -27,10 +27,10 @@ interface GenericModalProps {
 }
 
 const sizeClasses = {
-  sm: "max-w-sm",
-  md: "max-w-md",
-  lg: "max-w-lg",
-  xl: "max-w-xl",
+  sm: "sm:max-w-[384px]",
+  md: "sm:max-w-[500px]",
+  lg: "sm:max-w-[680px]",
+  xl: "sm:max-w-[768px]",
 };
 
 export function GenericModal({
@@ -52,7 +52,7 @@ export function GenericModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className={cn("sm:max-w-[500px]", sizeClasses[size], className)}
+        className={cn(sizeClasses[size], className)}
       >
         {title && (
           <DialogHeader className={headerClassName}>
