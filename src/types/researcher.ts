@@ -12,7 +12,10 @@ export type SuccessResponse = {
     linkedinProfile: string | null;
     agentId: string;
     status: string;
+    role: string;
   };
-  researcher_type: "primary" | "contributor";
+  researcher_type: "PRIMARY" | "CONTRIBUTOR";
   presentationDateTime: string | null;
+  errorType: string | null;
+  errorCode: string | null;
 } 
