@@ -158,6 +158,7 @@ export function ResearcherForm() {
                       currentRole: existingResearcher.currentRol || "",
                       githubUsername: existingResearcher.githubUsername || "",
                       linkedinProfile: existingResearcher.linkedinProfile || "",
+                      phone: existingResearcher.phone || "",
                     }}
                     onSuccess={() => {
                       if (profile?.email) {

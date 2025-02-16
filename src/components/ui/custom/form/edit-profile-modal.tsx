@@ -21,6 +21,7 @@ interface EditProfileModalProps {
     currentRole: string;
     githubUsername: string;
     linkedinProfile: string;
+    phone: string;
   };
   onSuccess: () => void;
 }
@@ -28,6 +29,7 @@ interface EditProfileModalProps {
 export function EditProfileModal({ email, initialData, onSuccess }: EditProfileModalProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  console.log('initialData:', initialData)
   const [updateForm, setUpdateForm] = useState(initialData)
   const api = useApi()
 
@@ -90,6 +92,15 @@ export function EditProfileModal({ email, initialData, onSuccess }: EditProfileM
               value={updateForm.linkedinProfile}
               onChange={(e) => setUpdateForm({ ...updateForm, linkedinProfile: e.target.value })}
               placeholder="https://linkedin.com/in/tu-perfil"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="phone">Número de Teléfono</Label>
+            <Input
+              id="phone"
+              value={updateForm.phone || ''}
+              onChange={(e) => setUpdateForm({ ...updateForm, phone: e.target.value })}
+              placeholder="+34 123 456 789"
             />
           </div>
           <Button
