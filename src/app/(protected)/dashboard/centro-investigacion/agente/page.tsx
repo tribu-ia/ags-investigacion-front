@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import Link from "next/link";
 
 type ResearcherDetails = {
   name: string;
@@ -455,12 +456,12 @@ export default function AgenteInvestigadorPage() {
             Para comenzar tu investigación, primero debes registrarte como investigador.
           </p>
         </div>
-        <a
+        <Link
           href="/dashboard/documentation/nuevo-agente"
           className="inline-flex items-center justify-center rounded-md bg-primary px-8 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
           Comenzar a Investigar
-        </a>
+        </Link>
       </div>
     );
   }
