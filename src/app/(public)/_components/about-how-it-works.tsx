@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import {
   FileStack,
   GitPullRequest,
@@ -54,12 +56,20 @@ export const AboutHowItWorks = () => {
           key={index}
           className="group relative grid overflow-hidden rounded-lg bg-secondary-foreground/5 shadow-sm border border-border ring-0 hover:border-primary hover:ring-2 hover:ring-offset-2 hover:ring-offset-background hover:ring-primary/50 transition-all duration-200"
         >
-          <div className="absolute inset-0 size-full bg-[radial-gradient(#00000055_1px,transparent_1px)] [background-size:16px_16px] blur-[1.5px]" />
+          <AnimatedGridPattern
+            numSquares={30}
+            maxOpacity={0.06}
+            duration={3}
+            className={cn(
+              "[mask-image:radial-gradient(500px_circle_at_center,white,transparent)]",
+              "inset-x-0 inset-y-[-30%] h-[200%] skew-y-12"
+            )}
+          />
           <div className="relative shrink-0">
-            <div className="absolute inset-0 bg-gradient-to-b from-white to-50%" />
-            <div className="absolute inset-0 bg-gradient-to-t from-white to-50%" />
+            <div className="absolute inset-0 bg-gradient-to-b from-white dark:from-primary/10 to-50%" />
+            <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-primary/10 to-50%" />
 
-            <div className="relative p-10 backdrop-blur-[0.5px] space-y-3">
+            <div className="relative p-10 backdrop-blur-[2px] space-y-3">
               <div className="flex flex-row items-center gap-3 md:flex-col md:items-start">
                 <div className="size-12 md:size-16 bg-primary/10 rounded-full shrink-0 flex items-center justify-center group-hover:scale-105 transition-all duration-200">
                   {how.icon}
@@ -68,7 +78,7 @@ export const AboutHowItWorks = () => {
                   {index + 1}. {how.title}
                 </h2>
               </div>
-              <p className="mt-2 max-w-[600px] text-sm/6 text-gray-600 dark:text-gray-400">
+              <p className="mt-2 max-w-[600px] text-base/6 text-muted-foreground">
                 {how.description}
               </p>
             </div>

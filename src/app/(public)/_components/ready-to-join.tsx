@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { useState } from "react";
+import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
+import { cn } from "@/lib/utils";
 
 /*
     TODO: I added the email and discord user, but these may not be needed.
@@ -80,11 +82,19 @@ export const ReadyToJoin = () => {
 
   return (
     <div className="group relative grid overflow-hidden rounded-lg bg-secondary-foreground/5 shadow-sm border border-border ring-0 hover:border-primary hover:ring-2 hover:ring-offset-2 hover:ring-offset-background hover:ring-primary/50 transition-all duration-200">
-      <div className="absolute inset-0 size-full bg-[radial-gradient(#00000055_1px,transparent_1px)] [background-size:16px_16px] blur-[1.5px]" />
+      <AnimatedGridPattern
+        numSquares={30}
+        maxOpacity={0.06}
+        duration={3}
+        className={cn(
+          "[mask-image:radial-gradient(500px_circle_at_center,white,transparent)]",
+          "inset-x-0 inset-y-[-30%] h-[200%] skew-y-12"
+        )}
+      />{" "}
       <div className="relative shrink-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-white to-50%" />
-        <div className="absolute inset-0 bg-gradient-to-t from-white to-50%" />
-        <div className="relative p-10 backdrop-blur-[0.5px] space-y-5">
+        <div className="absolute inset-0 bg-gradient-to-b from-white dark:from-primary/10 to-50%" />
+        <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-primary/10 to-50%" />
+        <div className="relative p-10 backdrop-blur-[2px] space-y-5">
           <div className="space-y-1">
             <h2 className="text-2xl/8 font-medium tracking-tight text-gray-950 dark:text-white">
               Encuentra tu Agente Perfecto
