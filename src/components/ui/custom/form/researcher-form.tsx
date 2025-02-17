@@ -50,6 +50,8 @@ export function ResearcherForm() {
   });
 
   const loadResearcherDetails = async () => {
+    setIsLoading(true);
+    
     if (!profile?.email) {
       setError(
         "No se encontró información del usuario. Por favor, inicia sesión nuevamente."
@@ -108,7 +110,7 @@ export function ResearcherForm() {
     );
   }
 
-  if (error) {
+  if (error && !existingResearcher) {
     return (
       <Card className="mt-4">
         <CardContent className="p-6">

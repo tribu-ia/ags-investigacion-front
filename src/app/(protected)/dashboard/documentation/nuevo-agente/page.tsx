@@ -1,9 +1,6 @@
 "use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ResearcherForm } from "@/components/ui/custom/form/researcher-form";
-import { LearnerForm } from "@/components/ui/custom/form/learner-form";
-import { Card } from "@/components/ui/card";
 
 export default function NuevoAgentePage() {
   return (

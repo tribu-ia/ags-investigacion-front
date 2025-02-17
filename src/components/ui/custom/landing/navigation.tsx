@@ -15,10 +15,10 @@ const navigationLinks = [
     title: "¿Cómo lo hacemos?",
     href: "#how-it-works",
   },
-  {
-    title: "Encuentra tu agente",
-    href: "#join-research",
-  },
+  // {
+  //   title: "Encuentra tu agente",
+  //   href: "#join-research",
+  // },
   {
     title: "Únete",
     href: "#call-to-action",

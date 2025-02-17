@@ -14,7 +14,7 @@ export default function Home() {
         <LandingHero />
         <Features />
         <HowItWorks />
-        <JoinForms />
+        {/*<JoinForms />**/}
         <CallToAction />
       </div>
     </main>
