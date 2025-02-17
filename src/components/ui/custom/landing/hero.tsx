@@ -319,7 +319,7 @@ function StatsSection() {
       </div>
       <div className="flex flex-col items-center">
         <span className="text-3xl font-bold text-white">
-          <CountUp start={0} end={5} duration={2.5} />
+          <CountUp start={0} end={10} duration={2.5} />
         </span>
         <span className="text-sm text-muted-foreground">Agentes Documentados</span>
       </div>

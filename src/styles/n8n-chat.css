@@ -1,0 +1,87 @@
+#n8n-chat {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.n8n-chat-bubble {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.n8n-chat-window {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+}
+
+.n8n-chat-header {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-radius: 12px 12px 0 0;
+}
+
+.n8n-chat-messages {
+  background-color: hsl(var(--background));
+}
+
+.n8n-chat-message-user {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-radius: 12px;
+}
+
+.n8n-chat-message-bot {
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  border-radius: 12px;
+}
+
+.n8n-chat-input {
+  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  border-radius: 0 0 12px 12px;
+}
+
+/* Estilos generales del chat */
+:root {
+  --n8n-chat-input-text: #000000;
+  --n8n-chat-message-text: #000000;
+}
+
+/* Estilos específicos para el input */
+#n8n-chat .n8n-chat-input {
+  color: #000000 !important;
+}
+
+/* Estilos para los mensajes */
+#n8n-chat .n8n-chat-message {
+  color: #000000 !important;
+}
+
+/* Estilos para el área de entrada de texto */
+#n8n-chat textarea,
+#n8n-chat input {
+  color: #000000 !important;
+}
+
+/* Asegurarse que el placeholder también sea visible */
+#n8n-chat textarea::placeholder,
+#n8n-chat input::placeholder {
+  color: #666666 !important;
+}
+
+.chat-powered-by {
+  display: none;
+}
+
+.chat-layout .chat-header {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  text-align: center;
+}
+
+

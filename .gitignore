@@ -51,3 +51,11 @@ package-lock.json
 /*.env
 /.env.development
 
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.development
+.env.staging
+.env.production
+

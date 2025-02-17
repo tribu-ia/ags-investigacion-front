@@ -22,6 +22,19 @@ export const formatDate = (
   return date.toLocaleString(locale, options);
 }
 
+export const formatDateTime = (dateTimeStr: string) => {
+  const date = new Date(dateTimeStr)
+  return date.toLocaleDateString('es-CO', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  })
+}
+
 export type FilterableResource = {
   id: string;
   title: string;
