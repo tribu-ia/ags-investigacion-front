@@ -94,7 +94,10 @@ export const GitHubContributors = () => {
                       {contributor.login}
                     </h4>
                     <p className="text-xs text-foreground">
-                      {contributor.contributions} contribuciones
+                      {contributor.contributions}{" "}
+                      {contributor.contributions > 1
+                        ? "contribuciones"
+                        : "contribución"}
                     </p>
                   </div>
                 </Link>
