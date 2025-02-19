@@ -19,7 +19,7 @@ export const CallToAction = () => {
         variant="ghost"
         onClick={() =>
           document
-            .querySelector("#join-research")
+            .querySelector("#find-your-agent")
             ?.scrollIntoView({ behavior: "smooth" })
         }
       >
