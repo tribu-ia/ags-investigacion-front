@@ -1,4 +1,5 @@
 import { WhatsappIcon } from "@/components/ui/icons";
+import { ThemeSelector } from "@/components/ui/theme-selector";
 import { Instagram, LinkedinIcon } from "lucide-react";
 import Link from "next/link";
 
@@ -18,38 +19,41 @@ export const FooterLanding = () => {
               TribuIA
             </Link>
           </p>
-          <ul className="flex items-center gap-4">
-            <li>
-              <Link
-                href="https://www.instagram.com/tribuia"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary group"
-              >
-                <Instagram className="size-5 group-hover:scale-110 transition-all duration-200" />
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="https://chat.whatsapp.com/JX7ctC1P16s2hfoYrcJ0a9"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary group"
-              >
-                <WhatsappIcon className="size-5 min-w-5 group-hover:scale-110 transition-all duration-200" />
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="https://www.linkedin.com/company/tribu-ia"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary group"
-              >
-                <LinkedinIcon className="size-5 min-w-5 group-hover:scale-110 transition-all duration-200" />
-              </Link>
-            </li>
-          </ul>
+          <div className="flex flex-col items-center gap-5 sm:gap-3 sm:flex-row">
+            <ul className="flex items-center gap-4">
+              <li>
+                <Link
+                  href="https://www.instagram.com/tribuia"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary group"
+                >
+                  <Instagram className="size-5 group-hover:scale-110 transition-all duration-200" />
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="https://chat.whatsapp.com/JX7ctC1P16s2hfoYrcJ0a9"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary group"
+                >
+                  <WhatsappIcon className="size-5 min-w-5 group-hover:scale-110 transition-all duration-200" />
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="https://www.linkedin.com/company/tribu-ia"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary group"
+                >
+                  <LinkedinIcon className="size-5 min-w-5 group-hover:scale-110 transition-all duration-200" />
+                </Link>
+              </li>
+            </ul>
+            <ThemeSelector />
+          </div>
         </div>
       </div>
     </footer>
