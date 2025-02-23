@@ -30,7 +30,7 @@ export function NavMain({ items }: { items: SidebarItem[] }) {
     items?.some(item => isActive(item.url))
 
   return (
-    <SidebarGroup>
+    <SidebarGroup className="p-0">
       <VisuallyHidden asChild>
         <SidebarGroupLabel>Platform</SidebarGroupLabel>
       </VisuallyHidden>
@@ -71,7 +71,7 @@ export function NavMain({ items }: { items: SidebarItem[] }) {
                             asChild
                             isActive={isActive(subItem.url)}
                             className={isActive(subItem.url) ?
-                              "bg-primary/10 text-primary font-medium before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-primary" : ""}
+                              "px-3 bg-primary/10 text-primary font-medium before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-primary" : ""}
                           >
                             <Link href={subItem.url}>
                               <span>{subItem.title}</span>
