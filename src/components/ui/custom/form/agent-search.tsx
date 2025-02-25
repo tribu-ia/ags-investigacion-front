@@ -19,7 +19,27 @@ import {
 } from "@/components/ui/popover"
 import { z } from "zod"
 import { useApi } from "@/hooks/use-api"
+const SAMPLE_AGENTS = [
+  {
+    id: "data_assistant",
+    name: "Data Analysis Assistant",
+    description: "Helps with data cleaning and analysis",
+    specialization: "Data Processing",
+    compatibility: 95,
+    category:'example',
+    isAssigned:true
+  },
+  {
+    id: "ml_assistant",
 
+    name: "ML Training Assistant",
+    description: "Assists with model training and evaluation",
+    specialization: "Machine Learning",
+    compatibility: 90,
+    category:'example',
+    isAssigned:false
+  }
+];
 type Agent = {
   value: string
   label: string
@@ -168,7 +188,7 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
     initialLoadDone.current = true
   }, [loadMoreAgents]) // Agregamos loadMoreAgents a las dependencias
 
-  const filteredAgents = searchLocally(searchTerm)
+  const filteredAgents = SAMPLE_AGENTS
   const categories = Array.from(new Set(filteredAgents.map(agent => agent.category)))
 
   const noResults = filteredAgents.length === 0
@@ -356,13 +376,13 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
                   .filter(agent => agent.category === category)
                   .map(agent => (
                     <CommandItem
-                      key={agent.value}
-                      value={agent.label}
+                      key={agent.id}
+                      value={agent.name}
                       onSelect={() => {
                         if (!agent.isAssigned) {
-                          setValue(agent.value)
-                          onSelect(agent.value)
-                          setFormData(prev => ({ ...prev, agent: agent.value }))
+                          setValue(agent.id)
+                          onSelect(agent.id)
+                          setFormData(prev => ({ ...prev, agent: agent.id }))
                           setOpen(false)
                         }
                       }}
@@ -376,10 +396,10 @@ export function AgentSearch({ onSelect }: AgentSearchProps) {
                         <Check
                           className={cn(
                             "h-4 w-4",
-                            value === agent.value ? "opacity-100" : "opacity-0"
+                            value === agent.id ? "opacity-100" : "opacity-0"
                           )}
                         />
-                        <span>{agent.label}</span>
+                        <span>{agent.name}</span>
                       </div>
                       {agent.isAssigned && (
                         <span className="text-red-500 text-sm font-medium ml-2">
