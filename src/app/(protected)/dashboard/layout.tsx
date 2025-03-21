@@ -13,11 +13,13 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import Link from "next/link";
-import { AgentChat } from "@/components/ui/custom/agent-chat/agent-chat";
-import { InvestigationProvider } from "@/contexts/investigation-context";
 
+import AgentChat from "@/components/ui/custom/agent-chat/agent-chat";
+import { CopilotKit } from "@copilotkit/react-core";
 
-const viewsWithAgentChat = ["/dashboard/centro-investigacion/agente"];
+import "@copilotkit/react-ui/styles.css";
+import { ResearchProvider } from "@/contexts/investigation-context";
+const viewsWithAgentChat = ["/dashboard/centro-investigacion/agen"];
 
 export default function DashboardLayout({
   children,
@@ -28,7 +30,18 @@ export default function DashboardLayout({
 
   return (
       <SidebarProvider>
-        <InvestigationProvider>
+         <CopilotKit
+                    publicApiKey={process.env.NEXT_PUBLIC_COPILOT_CLOUD_API_KEY} // if using copilot cloud
+                    runtimeUrl={process.env.NEXT_PUBLIC_COPILOT_CLOUD_API_KEY ?
+                        // copilot cloud
+                        "https://api.cloud.copilotkit.ai/copilotkit/v1" :
+                        // local
+                        "/api/copilotkit"}
+                    showDevConsole={true}
+                    agent="agent"
+                    
+                >
+        <ResearchProvider>
         <AppSidebar />
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center gap-2">
@@ -56,7 +69,8 @@ export default function DashboardLayout({
         {viewsWithAgentChat.includes(breadcrumbs[breadcrumbs.length - 1].href) && (
           <AgentChat />
         )}
-        </InvestigationProvider>
+        </ResearchProvider>
+        </CopilotKit>
       </SidebarProvider>
   );
 }

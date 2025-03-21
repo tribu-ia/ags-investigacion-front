@@ -1,157 +1,79 @@
-"use client";
-import React, { createContext, useContext, useState, useCallback, useRef } from "react";
+'use client'
 
-/**
- * Tipo de contexto para la gestión de investigaciones
- * Define la estructura y métodos para manejar el estado de una investigación
- */
-interface InvestigationContextType {
-  /** Identificador único del agente seleccionado */
-  selectedAgentId: string | null;
-  
-  /** Nombre del agente seleccionado */
-  agentName: string | null;
-  
-  /** Indica si una investigación está en curso */
-  isInvestigating: boolean;
-  
-  /** Progreso actual de la investigación (0-100) */
-  progress: number;
-  
-  /** Fase actual de la investigación */
-  currentPhase: string;
-  
-  /** Mensaje de retroalimentación del sistema */
-  messageFeedback: string | null;
-  
-  /** Mensaje de retroalimentación del usuario */
-  userMessageFeedback: string | null;
-  
-  /** Función para iniciar la investigación */
-  startInvestigation: () => Promise<void>;
-  
-  /** Actualiza el agente seleccionado */
-  updateSelectedAgent: (id: string | null, name: string | null) => void;
-  
-  /** Actualiza el estado de la investigación */
-  updateInvestigationState: (progress: number, phase: string) => void;
-  
-  /** Registra la función de inicio de investigación */
-  registerStartResearchFn: (fn: (() => Promise<void>)) => void;
-  
-  /** Establece el estado de investigación */
-  setIsInvestigating: (value: boolean) => void;
-  
-  /** Establece el mensaje de retroalimentación del sistema */
-  setMessageFeedback: (value: string | null) => void;
-  
-  /** Establece el mensaje de retroalimentación del usuario */
-  setUserMessageFeedback: (value: string | null) => void;
+import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react'
+import type { ResearchState } from '@/lib/types'
+import { useCoAgent } from "@copilotkit/react-core";
+import useLocalStorage from "@/lib/hooks/useLocalStorage";
+
+interface ResearchContextType {
+    state: ResearchState;
+    setResearchState: (newState: ResearchState | ((prevState: ResearchState) => ResearchState)) => void
+    sourcesModalOpen: boolean
+    setSourcesModalOpen: (open: boolean) => void
+    runAgent: () => void
+    activeResearches: Array<{ id: string; title: string; description?: string }>
+    setActiveResearches: (researches: Array<{ id: string; title: string; description?: string }>) => void
+    selectedResearchId: string | null
+    setSelectedResearchId: (id: string | null) => void
 }
 
-/** Contexto predeterminado con valores iniciales vacíos */
-const defaultContext: InvestigationContextType = {
-  selectedAgentId: null,
-  agentName: null,
-  isInvestigating: false,
-  progress: 0,
-  currentPhase: "",
-  messageFeedback: null,
-  userMessageFeedback: null,
-  startInvestigation: async () => {},
-  updateSelectedAgent: () => {},
-  updateInvestigationState: () => {},
-  registerStartResearchFn: () => {},
-  setIsInvestigating: () => {},
-  setMessageFeedback: () => {},
-  setUserMessageFeedback: () => {}
-};
+const ResearchContext = createContext<ResearchContextType | undefined>(undefined)
 
-/** Crear el contexto de investigación */
-const InvestigationContext = createContext<InvestigationContextType>(defaultContext);
+export function ResearchProvider({ children }: { children: ReactNode }) {
+    const [sourcesModalOpen, setSourcesModalOpen] = useState<boolean>(false)
+    const [activeResearches, setActiveResearches] = useState<Array<{ id: string; title: string; description?: string }>>([])
+    const [selectedResearchId, setSelectedResearchId] = useState<string | null>(null)
+    const { state: coAgentState, setState: setCoAgentsState, run } = useCoAgent<ResearchState>({
+        name: 'agent',
+        initialState: {},
+    });
+    const [localStorageState, setLocalStorageState] = useLocalStorage<ResearchState | null>('research', null);
 
-/** Hook personalizado para acceder al contexto de investigación */
-export const useInvestigation = () => useContext(InvestigationContext);
+    // Memoize the sync function to prevent unnecessary re-renders
+    const syncState = useCallback(() => {
+        const coAgentsStateEmpty = Object.keys(coAgentState).length < 1;
+        const localStorageStateEmpty = localStorageState == null || Object.keys(localStorageState).length < 1;
 
-/**
- * Proveedor del contexto de investigación
- * Gestiona el estado global de la investigación
- */
-export const InvestigationProvider = ({ 
-  children 
-}: { 
-  children: React.ReactNode;
-}) => {
-  // Estados para gestionar diferentes aspectos de la investigación
-  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
-  const [agentName, setAgentName] = useState<string | null>(null);
-  const [isInvestigating, setIsInvestigating] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [currentPhase, setCurrentPhase] = useState("");
-  const [messageFeedback, setMessageFeedback] = useState<string | null>(null);
-  const [userMessageFeedback, setUserMessageFeedback] = useState<string | null>(null);
+        if (!localStorageStateEmpty && coAgentsStateEmpty) {
+            setCoAgentsState(localStorageState);
+        } else if (!coAgentsStateEmpty && localStorageStateEmpty) {
+            setLocalStorageState(coAgentState);
+        } else if (!localStorageStateEmpty && !coAgentsStateEmpty && JSON.stringify(localStorageState) !== JSON.stringify(coAgentState)) {
+            setLocalStorageState(coAgentState);
+        }
+    }, [coAgentState, localStorageState, setCoAgentsState, setLocalStorageState]);
 
-  // Referencia para almacenar la función de inicio de investigación
-  const startResearchFnRef = useRef<(() => Promise<void>) | null>(null);
-  
-  /** Actualiza el agente seleccionado de manera segura */
-  const updateSelectedAgent = useCallback((id: string | null, name: string | null) => {
-    setSelectedAgentId(id);
-    setAgentName(name);
-  }, []);
-  
-  /** Actualiza el estado de la investigación */
-  const updateInvestigationState = useCallback((newProgress: number, newPhase: string) => {
-    setProgress(newProgress);
-    setCurrentPhase(newPhase);
-  }, []);
-  
-  /** Registra la función de inicio de investigación */
-  const registerStartResearchFn = useCallback((fn: () => Promise<void>) => {
-    startResearchFnRef.current = fn;
-  }, []);
-  
-  /** Inicia la investigación de manera segura */
-  const startInvestigation = useCallback(async () => {
-    if (!startResearchFnRef.current) {
-      console.warn("No se proporcionó un manejador de inicio de investigación");
-      return;
+    // Use a ref to track if we've already synced
+    const hasSynced = useRef(false);
+
+    useEffect(() => {
+        if (!hasSynced.current) {
+            syncState();
+            hasSynced.current = true;
+        }
+    }, [syncState]);
+
+    return (
+        <ResearchContext.Provider value={{ 
+            state: coAgentState, 
+            setResearchState: setCoAgentsState as ResearchContextType['setResearchState'], 
+            setSourcesModalOpen, 
+            sourcesModalOpen, 
+            runAgent: run,
+            activeResearches,
+            setActiveResearches,
+            selectedResearchId,
+            setSelectedResearchId
+        }}>
+            {children}
+        </ResearchContext.Provider>
+    )
+}
+
+export function useResearch() {
+    const context = useContext(ResearchContext)
+    if (context === undefined) {
+        throw new Error('useResearch must be used within a ResearchProvider')
     }
-    
-    try {
-      setIsInvestigating(true);
-      await startResearchFnRef.current();
-    } catch (error) {
-      console.error("Error al iniciar la investigación:", error);
-      setIsInvestigating(false);
-    }
-  }, []);
-
-  /** Establece explícitamente el estado de investigación */
-  const explicitSetIsInvestigating = useCallback((value: boolean) => {
-    setIsInvestigating(value);
-  }, []);
-
-  return (
-    <InvestigationContext.Provider
-      value={{
-        selectedAgentId,
-        agentName,
-        isInvestigating,
-        progress,
-        currentPhase,
-        messageFeedback,
-        userMessageFeedback,
-        startInvestigation,
-        updateSelectedAgent,
-        updateInvestigationState,
-        registerStartResearchFn,
-        setIsInvestigating: explicitSetIsInvestigating,
-        setMessageFeedback,
-        setUserMessageFeedback
-      }}
-    >
-      {children}
-    </InvestigationContext.Provider>
-  );
-};
+    return context
+}
