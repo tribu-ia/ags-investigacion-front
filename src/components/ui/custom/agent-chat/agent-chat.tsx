@@ -73,6 +73,21 @@ type ResearcherDetails = {
   contributorsResearches: ResearchAgent[];
 };
 
+// Actualizar el tipo Message para incluir toolInvocations
+interface Message {
+  id: string;
+  type: "user" | "agent" | "loading";
+  content: string;
+  timestamp: Date;
+  isNew: boolean;
+  toolInvocations?: Array<{
+    toolCallId: string;
+    toolName: string;
+    state: string;
+    result?: any;
+  }>;
+}
+
 // Componente para renderizar un mensaje individual
 const MessageItem = ({
   message,
@@ -127,6 +142,16 @@ const MessageItem = ({
     );
   }
   return <AgentMessage message={message} />;
+};
+
+// Añadir función para enviar respuesta al WebSocket
+const sendWebSocketResponse = (ws: WebSocket, assignmentId: string, userFeedback: string) => {
+  const message = {
+    type: "user_response",
+    user_feedback: userFeedback,
+    assignmentId: assignmentId
+  };
+  ws.send(JSON.stringify(message));
 };
 
 export function AgentChat() {
@@ -262,6 +287,35 @@ export function AgentChat() {
 
     const normalizedInput = input.toLowerCase().trim();
 
+    // Si hay un mensaje de feedback activo, tratar la entrada como respuesta
+    if (messageFeedback) {
+      append({
+        role: "user",
+        content: input,
+      });
+
+      // Si el usuario escribe "continuar" o variaciones
+      const continueResponses = ["continuar", "si", "sí", "ok", "seguir", "adelante"];
+      const isContinue = continueResponses.some(resp => normalizedInput.includes(resp));
+
+      if (isContinue) {
+        // Enviar respuesta "continuar"
+        if (wsRef.current && selectedAgentId) {
+          sendWebSocketResponse(wsRef.current, selectedAgentId, "continuar");
+        }
+      } else {
+        // Si no es continuar, enviar el texto como feedback
+        if (wsRef.current && selectedAgentId) {
+          sendWebSocketResponse(wsRef.current, selectedAgentId, input);
+        }
+      }
+
+      setUserMessageFeedback(null); // Limpiar el mensaje de feedback
+      setInput("");
+      return;
+    }
+
+    // Resto de la lógica existente para otros tipos de mensajes
     const investigationStarters = [
       "iniciar investigacion",
       "iniciar investigación",
@@ -270,22 +324,6 @@ export function AgentChat() {
       "continuar",
       "comenzar",
     ];
-
-    const confirmationPhrases = [
-      "sí",
-      "si",
-      "yes",
-      "confirmo",
-      "adelante",
-      "ok",
-      "continuar",
-      "comenzar",
-      "proceder",
-    ];
-
-    const isConfirmation = confirmationPhrases.some((phrase) =>
-      normalizedInput.includes(phrase)
-    );
 
     const isInvestigationStart = investigationStarters.some((starter) =>
       normalizedInput.includes(starter)
@@ -309,7 +347,7 @@ export function AgentChat() {
       return;
     }
 
-    if (isConfirmation || isInvestigationStart) {
+    if (isInvestigationStart) {
       append({
         role: "user",
         content: input,
@@ -335,15 +373,6 @@ export function AgentChat() {
 
       setInput("");
       return;
-    }
-
-    if (messageFeedback) {
-      append({
-        role: "user",
-        content: input,
-      });
-
-      setUserMessageFeedback(input);
     }
 
     handleSubmit(e);
@@ -515,20 +544,13 @@ export function AgentChat() {
                       animate={{ opacity: 1, x: 0 }}
                       className="w-full"
                     >
-                      <Card className="">
+                      <Card>
                         <CardContent className="p-4">
-                          <div className="flex justify-between items-center">
+                          <div className="space-y-2">
                             <p className="text-white">{messageFeedback}</p>
-                            <Button
-                              variant="outline"
-                              onClick={() => {
-                                setUserMessageFeedback("continuar");
-                                onSubmitForm(new Event("submit") as any);
-                              }}
-                              className="ml-4"
-                            >
-                              Continuar
-                            </Button>
+                            <p className="text-sm text-muted-foreground">
+                              Escribe "continuar" para aprobar el plan o proporciona tus sugerencias de cambios escribiendo tu feedback.
+                            </p>
                           </div>
                         </CardContent>
                       </Card>

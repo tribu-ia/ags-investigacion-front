@@ -31,7 +31,6 @@ import {
 } from "@/components/ui/select";
 import Link from "next/link";
 import { useInvestigation } from "@/contexts/investigation-context";
-import { HML_MOCK_FEEDBACK } from "@/lib/mocks";
 
 type ResearcherDetails = {
   name: string;
@@ -136,9 +135,15 @@ type ErrorMessage = BaseDataMessage & {
     error: string;
   };
 };
-type HumanReviewMessage = BaseMessage & {
+type HumanReviewMessage = BaseDataMessage & {
   type: "human_review";
   message: string;
+  plan: Array<{
+    id: string;
+    name: string;
+    description: string;
+    research: boolean;
+  }>;
 };
 // Actualizar el tipo WebSocketMessage
 type WebSocketMessage =
@@ -241,6 +246,7 @@ export default function AgenteInvestigadorPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [isPlanReviewing, setIsPlanReviewing] = useState(false);
 
   const {
     updateSelectedAgent,
@@ -337,6 +343,9 @@ export default function AgenteInvestigadorPage() {
         case "compiler_progress":
           handleCompilerProgress(message as CompilerProgressMessage);
           break;
+        case "human_review":
+          handleHumanReview(message as HumanReviewMessage);
+          break;
         case "error":
           handleError(message as ErrorMessage);
           break;
@@ -357,26 +366,6 @@ export default function AgenteInvestigadorPage() {
   const handleStartedMessage = (message: StartedMessage) => {
     setCurrentPhase(message.message);
     setProgress(0);
-  
-    // HML_MOCK_FEEDBACK.message necesita ser remplazado por message.message
-    setMessageFeedback(HML_MOCK_FEEDBACK.message);
-    const planMarkdown = HML_MOCK_FEEDBACK.plan || [];
-
-    const formattedMarkdown = planMarkdown
-      .map(
-        (section) => `## ${section.name}
-
-${section.description}
-
-${
-  section.research
-    ? "**🔍 Requiere investigación**"
-    : "**✅ No requiere investigación**"
-}`
-      )
-      .join("\n\n---\n\n"); 
-
-    setMarkdown(formattedMarkdown);
 
     if (message.data.status === "started") {
       setIsStartingResearch(false);
@@ -443,6 +432,30 @@ ${
         setIsInvestigating(false);
       }
     }
+  };
+
+  const handleHumanReview = (message: HumanReviewMessage) => {
+    setCurrentPhase(message.message);
+    setMessageFeedback(message.message);
+    setIsPlanReviewing(true);
+
+    const formattedMarkdown = message.plan
+      .map(
+        (section) => `## ${section.name}
+
+${section.description}
+
+${
+  section.research
+    ? "**🔍 Requiere investigación**"
+    : "**✅ No requiere investigación**"
+}`
+      )
+      .join("\n\n---\n\n");
+
+    setMarkdown(formattedMarkdown);
+    setIsStartingResearch(false);
+    setIsInvestigating(false);
   };
 
   const handleStartResearch = async () => {
@@ -575,6 +588,24 @@ ${
   useEffect(() => {
     handleStartResearch();
   }, [isInvestigating]);
+
+  // Función para manejar la respuesta del usuario al plan
+  const handlePlanResponse = (response: 'continuar' | string) => {
+    if (!wsRef.current) return;
+
+    try {
+      const message = {
+        type: 'plan_response',
+        response: response
+      };
+      wsRef.current.send(JSON.stringify(message));
+      setIsPlanReviewing(false);
+    } catch (error) {
+      console.error('Error sending plan response:', error);
+      toast.error('Error al enviar la respuesta');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center min-h-[50vh] p-4">

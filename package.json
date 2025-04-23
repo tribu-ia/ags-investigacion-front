@@ -10,6 +10,8 @@
     "export": "next export"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^1.2.1",
+    "@ai-sdk/react": "^1.1.21",
     "@hookform/resolvers": "^3.9.1",
     "@lottiefiles/dotlottie-react": "^0.12.3",
     "@n8n/chat": "^0.27.1",
@@ -37,6 +39,7 @@
     "@react-three/drei": "^9.92.7",
     "@react-three/fiber": "^8.15.12",
     "@react-three/postprocessing": "^2.19.1",
+    "ai": "^4.1.54",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
